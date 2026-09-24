@@ -15,12 +15,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 </head>
 <body>
   <!-- List page -->
   <div id="list-page" class="page" hidden>
     <header class="topbar">
-      <a class="brand" href="/">⚡ Spark LeetCode</a>
+      <a class="brand" href="/"><i data-lucide="zap"></i> Spark LeetCode</a>
     </header>
     <main class="list-main">
       <div class="list-tools">
@@ -40,22 +41,22 @@
   <!-- Problem page -->
   <div id="problem-page" class="page" hidden>
     <header class="topbar">
-      <a class="brand" href="/">⚡</a>
-      <a class="nav-link" href="/">☰ Problem List</a>
+      <a class="brand" href="/" title="Spark LeetCode"><i data-lucide="zap"></i></a>
+      <a class="nav-link" href="/"><i data-lucide="list"></i> Problem List</a>
       <div class="topbar-center">
         <div class="seg" id="method" title="Function to test">
           <button data-method="dataframe">DataFrame · solve()</button>
           <button data-method="sql">SQL · solve_sql()</button>
         </div>
-        <button id="run" class="btn btn-run" title="Run tests (Ctrl/⌘ + Enter)">▶ Run</button>
+        <button id="run" class="btn btn-run" title="Run tests (Ctrl/⌘ + Enter)"><i data-lucide="play"></i> Run</button>
       </div>
       <span class="spacer"></span>
     </header>
     <main class="workspace" id="workspace">
       <section class="panel" id="left">
         <div class="tabs">
-          <button class="tab active" data-tab="description">📄 Description</button>
-          <button class="tab" data-tab="solution">🧪 Solution</button>
+          <button class="tab active" data-tab="description"><i data-lucide="file-text"></i> Description</button>
+          <button class="tab" data-tab="solution"><i data-lucide="flask-conical"></i> Solution</button>
         </div>
         <div class="panel-body" id="description"></div>
         <div class="panel-body" id="solution" hidden>
@@ -70,10 +71,10 @@
       <div class="column" id="right">
         <section class="panel" id="code-panel">
           <div class="tabs">
-            <span class="tab active code-title">&lt;/&gt; Code</span>
+            <span class="tab active code-title"><i data-lucide="code"></i> Code</span>
             <span class="lang" id="lang">Python · practice_dataframe.py</span>
             <span class="spacer"></span>
-            <button id="reset" class="icon-btn" title="Reset practice_dataframe.py to the template">↺</button>
+            <button id="reset" class="icon-btn" title="Reset practice_dataframe.py to the template"><i data-lucide="rotate-ccw"></i></button>
           </div>
           <div class="panel-body editor-host" id="editor"></div>
           <div class="statusbar"><span id="save-state">Saved</span><span id="cursor"></span></div>
@@ -81,8 +82,8 @@
         <div class="gutter gutter-h" id="gutter-h"></div>
         <section class="panel" id="test-panel">
           <div class="tabs">
-            <button class="tab active" data-tab="testcase">☑ Testcase</button>
-            <button class="tab" data-tab="result">&gt;_ Test Result</button>
+            <button class="tab active" data-tab="testcase"><i data-lucide="square-check"></i> Testcase</button>
+            <button class="tab" data-tab="result"><i data-lucide="terminal"></i> Test Result</button>
           </div>
           <div class="panel-body" id="testcase"></div>
           <div class="panel-body" id="result" hidden></div>

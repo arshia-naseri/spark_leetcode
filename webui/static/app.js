@@ -27,6 +27,14 @@ async function api(path, options = {}) {
   return data;
 }
 
+// Lucide icon as an SVG string. Static icons in index.html use data-lucide.
+function icon(name) {
+  const [tag, attrs, children] = lucide.icons[name];
+  return lucide.createElement([tag, { ...attrs, class: "lucide" }, children]).outerHTML;
+}
+
+lucide.createIcons();
+
 // ---------- Routing ----------
 
 function route() {
@@ -71,7 +79,7 @@ function renderList() {
   $("#count").textContent = `${rows.length} / ${problems.length}`;
   $("#problem-list").innerHTML = rows.length ? rows.map((p) => `
     <a class="problem-row" href="/p/${p.name}">
-      <span class="dot-attempted" title="${p.attempted ? "Attempted: a practice file has changes" : ""}">${p.attempted ? "◐" : ""}</span>
+      <span class="dot-attempted" title="${p.attempted ? "Attempted: a practice file has changes" : ""}">${p.attempted ? icon("CircleDot") : ""}</span>
       <span class="problem-title">${esc(p.title)}</span>
       <span class="diff-${p.difficulty}">${cap(p.difficulty)}</span>
     </a>`).join("") : `<div class="empty">No questions found.</div>`;
@@ -244,7 +252,7 @@ async function openProblem(name) {
   if (diffLine) {
     const link = diffLine.querySelector("a");
     diffLine.innerHTML = `<span class="badge diff-${p.difficulty}">${cap(p.difficulty)}</span>`
-      + (link ? ` &nbsp;<a href="${esc(link.href)}" target="_blank" rel="noopener">LeetCode ↗</a>` : "");
+      + (link ? ` &nbsp;<a href="${esc(link.href)}" target="_blank" rel="noopener">LeetCode ${icon("ExternalLink")}</a>` : "");
   }
   $$("#description a[href^='http']").forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
 
@@ -387,7 +395,7 @@ async function run() {
     $("#result").innerHTML = `<div class="error-box">${esc(err.message)}</div>`;
   } finally {
     $("#run").disabled = false;
-    $("#run").textContent = "▶ Run";
+    $("#run").innerHTML = `${icon("Play")} Run`;
   }
 }
 
@@ -403,10 +411,10 @@ function firstFailing(results) {
 }
 
 const MARK = {
-  accepted: `<span class="mark ok">✓</span>`,
-  wrong: `<span class="mark bad">✗</span>`,
-  error: `<span class="mark bad">✗</span>`,
-  skipped: `<span class="mark skip">–</span>`,
+  accepted: `<span class="mark ok">${icon("Check")}</span>`,
+  wrong: `<span class="mark bad">${icon("X")}</span>`,
+  error: `<span class="mark bad">${icon("X")}</span>`,
+  skipped: `<span class="mark skip">${icon("Minus")}</span>`,
 };
 
 function verdict(results) {

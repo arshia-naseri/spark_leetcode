@@ -29,6 +29,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .muted { color: var(--muted); }
 .spacer { flex: 1; }
 
+/* Lucide icons: size follows the text, color follows currentColor. */
+.lucide { width: 1.1em; height: 1.1em; vertical-align: -0.2em; flex: none; }
+.brand .lucide { color: var(--medium); }
+.icon-btn .lucide { vertical-align: -0.15em; }
+.mark .lucide { stroke-width: 3; width: 1em; height: 1em; }
+
 .page { height: 100vh; display: flex; flex-direction: column; }
 
 /* Top bar */
