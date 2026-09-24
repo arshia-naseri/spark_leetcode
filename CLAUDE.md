@@ -20,6 +20,7 @@ uv run pytest -k "practice and case1"           # one case (-k turns off the def
 uv run python -m problems.easy.p0175_combine_two_tables._internal.main            # print practice output
 uv run python -m problems.easy.p0175_combine_two_tables._internal.main solution   # print reference output
 uv run python reset.py p0175                    # reset practice.py to template (--all for all)
+uv run python -m webui                          # web UI at http://127.0.0.1:8000
 ```
 
 Full list w/ explanations: `docs/commands.md`. Keep it in sync when commands change.
@@ -34,6 +35,10 @@ common/spark.py    # get_spark(): shared SparkSession builder
 common/leetcode.py # check(): compares answers and makes LeetCode-style reports
 common/practice.py # makes/resets practice.py from practice_template.py
 reset.py           # CLI: reset practice.py files
+webui/             # local web UI (stdlib http.server): problem list, 3 panels, runs pytest
+  server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset
+  cases.py         # reads CASES tables w/ fake Spark (no JVM) for Testcase tab
+  static/          # index.html, app.js, style.css. CodeMirror + marked from CDN
 problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice.py files
 problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
   pNNNN_<slug>/    # NO __init__.py here (namespace package)
@@ -75,6 +80,7 @@ problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
 - Exception → `Runtime Error` w/ first line of error.
 - `NotImplementedError` → skip.
 - Correct → saves output table in `user_properties`. `conftest.py` prints in "Output" section.
+- Every case also saves `leetcode_result` dict (status, inputs, output, expected, marks). `--leetcode-json PATH` writes them as JSON. Web UI reads this.
 
 ## Spark config
 

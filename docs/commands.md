@@ -42,6 +42,32 @@ New problem: run its tests. All `solution` tests must pass, all `practice` tests
 uv run pytest pNNNN --all
 ```
 
+## Web UI
+
+Start the local web UI. It opens <http://127.0.0.1:8000> in the browser:
+
+```bash
+uv run python -m webui
+uv run python -m webui --port 8080   # use a different port
+uv run python -m webui --no-browser  # do not open the browser
+```
+
+The home page shows all problems. Click a problem to open it in three panels:
+
+- Left: the question (`question.md`). The Solution tab shows the reference answer.
+- Top right: the editor for `practice.py`. The UI saves your code automatically.
+- Bottom right: the test cases and the test results.
+
+Select `solve()` (DataFrame API) or `solve_sql()` (Spark SQL), then click **Run** (Ctrl/⌘ + Enter).
+Each run starts pytest, so a run takes approximately 6 s.
+The ↺ button resets `practice.py` to the template. This deletes your code in that file.
+
+The UI runs pytest with `--leetcode-json PATH`. This option writes the result of each case as JSON:
+
+```bash
+uv run pytest p0175 --leetcode-json results.json
+```
+
 ## Add a problem
 
 In Claude Code, add a problem from a LeetCode URL:

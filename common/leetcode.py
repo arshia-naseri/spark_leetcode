@@ -54,6 +54,21 @@ def _table(df: DataFrame) -> tuple[list[str], list[tuple]]:
     return df.columns, [tuple(r) for r in df.collect()]
 
 
+def _json_table(
+    columns: list[str],
+    rows: list[tuple],
+    marked_cols: set[int] = frozenset(),
+    marked_rows: set[int] = frozenset(),
+) -> dict:
+    """Return a table as JSON data. All cells are text, the same as in format_table()."""
+    return {
+        "columns": list(columns),
+        "rows": [[_cell(v) for v in row] for row in rows],
+        "marked_cols": sorted(marked_cols),
+        "marked_rows": sorted(marked_rows),
+    }
+
+
 def _indent(text: str) -> str:
     return "\n".join("  " + line for line in text.splitlines())
 
@@ -113,18 +128,29 @@ def check(
     If the answer is correct, the output is kept for the summary at the end of the run.
     """
     case = request.node.callspec.id
+    input_tables = {name: _table(df) for name, df in inputs.items()}
+    # The same result as data, for the web UI. conftest.py writes it with --leetcode-json.
+    result: dict = {
+        "case": case,
+        "inputs": {name: _json_table(*table) for name, table in input_tables.items()},
+    }
+    request.node.user_properties.append(("leetcode_result", result))
     input_text = "\n\n".join(
-        f"{GREY}{name} ={RESET}\n{_indent(format_table(*_table(df)))}"
-        for name, df in inputs.items()
+        f"{GREY}{name} ={RESET}\n{_indent(format_table(*table))}"
+        for name, table in input_tables.items()
     )
 
     start = time.perf_counter()
     try:
         out_cols, out_rows = _table(solve())
     except NotImplementedError:
+        result["status"] = "skipped"
         pytest.skip("not implemented yet")
     except Exception as exc:  # noqa: BLE001
         message = str(exc).strip().splitlines()[0] if str(exc).strip() else ""
+        result.update(
+            status="error", error=f"{type(exc).__name__}: {message}", detail=str(exc)[:4000]
+        )
         pytest.fail(
             f"\n{RED}Runtime Error{RESET}   {case}\n\n"
             f"{type(exc).__name__}: {message}\n\n"
@@ -132,6 +158,7 @@ def check(
             pytrace=False,
         )
     runtime_ms = (time.perf_counter() - start) * 1000
+    result["runtime_ms"] = round(runtime_ms)
 
     exp_cols, exp_rows = _table(expected)
     reason = _column_diff(out_cols, exp_cols)
@@ -144,6 +171,12 @@ def check(
         missing_cols = {i for i, c in enumerate(exp_cols) if c not in out_cols}
         output_table = format_table(out_cols, out_rows, extra_cols, extra_rows, RED)
         expected_table = format_table(exp_cols, exp_rows, missing_cols, missing_rows, GREEN)
+        result.update(
+            status="wrong",
+            reason=reason,
+            output=_json_table(out_cols, out_rows, extra_cols, extra_rows),
+            expected=_json_table(exp_cols, exp_rows, missing_cols, missing_rows),
+        )
         reason_text = "".join(f"{RED}{line}{RESET}\n" for line in reason)
         pytest.fail(
             f"\n{RED}Wrong Answer{RESET}   Runtime: {runtime_ms:.0f} ms   {case}\n\n"
@@ -154,6 +187,11 @@ def check(
             pytrace=False,
         )
 
+    result.update(
+        status="accepted",
+        output=_json_table(out_cols, out_rows),
+        expected=_json_table(exp_cols, exp_rows),
+    )
     request.node.user_properties.append(
         (
             "leetcode_output",

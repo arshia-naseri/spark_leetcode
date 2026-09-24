@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,11 @@ def pytest_addoption(parser):
         action="store_true",
         dest="all_modules",
         help="Run practice.py and the reference answers.",
+    )
+    group.addoption(
+        "--leetcode-json",
+        metavar="PATH",
+        help="Write the result of each test case as JSON to PATH. The web UI uses this.",
     )
 
 
@@ -80,3 +86,29 @@ def pytest_terminal_summary(terminalreporter):
         terminalreporter.section("Output")
         for text in outputs:
             terminalreporter.write_line(text)
+
+
+
+# Data for --leetcode-json: the case results and the errors that stop collection.
+_json_results: list[dict] = []
+_json_errors: list[str] = []
+
+
+def pytest_collectreport(report):
+    if report.failed:
+        _json_errors.append(str(report.longrepr))
+
+
+def pytest_runtest_logreport(report):
+    for name, value in report.user_properties:
+        if name == "leetcode_result" and report.when == "call":
+            _json_results.append({"nodeid": report.nodeid, **value})
+    if report.failed and report.when != "call":
+        _json_errors.append(str(report.longrepr))
+
+
+def pytest_sessionfinish(session):
+    path = session.config.getoption("leetcode_json")
+    if path:
+        data = {"results": _json_results, "errors": _json_errors}
+        Path(path).write_text(json.dumps(data))
