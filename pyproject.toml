@@ -1,0 +1,16 @@
+[project]
+name = "spark-leetcode"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "pyspark>=4.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["problems"]
+addopts = "-q --show-capture=no -p no:warnings"
