@@ -1,6 +1,8 @@
 """Make practice.py files from practice_template.py files.
 
-Layout: problems/<problem>/practice.py and problems/<problem>/_internal/practice_template.py.
+Layout: problems/<difficulty>/<problem>/practice.py and
+problems/<difficulty>/<problem>/_internal/practice_template.py.
+The difficulty folder is easy, medium, or hard.
 """
 
 import shutil
@@ -12,7 +14,11 @@ PRACTICE = "practice.py"
 
 
 def problem_dirs() -> list[Path]:
-    return sorted(p.parent.parent for p in PROBLEMS_DIR.glob(f"*/{TEMPLATE}"))
+    """Return the problem folders of all difficulty folders, sorted by name."""
+    return sorted(
+        (p.parent.parent for p in PROBLEMS_DIR.glob(f"*/*/{TEMPLATE}")),
+        key=lambda p: p.name,
+    )
 
 
 def ensure_practice_files() -> None:

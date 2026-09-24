@@ -1,17 +1,19 @@
 """Make an empty problem folder with placeholder files.
 
-Usage: uv run python .claude/skills/add-problem/scripts/scaffold.py <folder>
+Usage: uv run python .claude/skills/add-problem/scripts/scaffold.py <difficulty> <folder>
 
-Example: scaffold.py p0176_second_highest_salary
+Example: scaffold.py Medium p0176_second_highest_salary
 
-The script does not change a folder that exists. It makes:
-  problems/<folder>/question.md
-  problems/<folder>/_internal/__init__.py            (empty)
-  problems/<folder>/_internal/practice_template.py
-  problems/<folder>/_internal/solution.py
-  problems/<folder>/_internal/data.py
-  problems/<folder>/_internal/test_cases.py
-  problems/<folder>/_internal/main.py
+<difficulty> is easy, medium, or hard (any case).
+The script does not change a folder that exists. It stops if the problem
+exists in a different difficulty folder. It makes:
+  problems/<difficulty>/<folder>/question.md
+  problems/<difficulty>/<folder>/_internal/__init__.py            (empty)
+  problems/<difficulty>/<folder>/_internal/practice_template.py
+  problems/<difficulty>/<folder>/_internal/solution.py
+  problems/<difficulty>/<folder>/_internal/data.py
+  problems/<difficulty>/<folder>/_internal/test_cases.py
+  problems/<difficulty>/<folder>/_internal/main.py
 Each placeholder has a TODO line. Replace all TODO lines with the problem data.
 It does not make practice.py. problems/__init__.py makes it from the template.
 """
@@ -22,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 PROBLEMS = ROOT / "problems"
+DIFFICULTIES = ("easy", "medium", "hard")
 
 PLACEHOLDERS = {
     "question.md": "# TODO: question title\n",
@@ -35,14 +38,17 @@ PLACEHOLDERS = {
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         sys.exit(__doc__)
-    name = sys.argv[1]
+    difficulty, name = sys.argv[1].lower(), sys.argv[2]
+    if difficulty not in DIFFICULTIES:
+        sys.exit(f"Bad difficulty {sys.argv[1]!r}. Use one of: {', '.join(DIFFICULTIES)}.")
     if not re.fullmatch(r"p\d{4}_[a-z0-9_]+", name) or not name.isidentifier():
         sys.exit(f"Bad folder name {name!r}. Use p + 4 digits + _ + snake_case slug.")
-    folder = PROBLEMS / name
-    if folder.exists():
-        sys.exit(f"{folder.relative_to(ROOT)} exists. Nothing changed.")
+    existing = [PROBLEMS / d / name for d in DIFFICULTIES if (PROBLEMS / d / name).exists()]
+    if existing:
+        sys.exit(f"{existing[0].relative_to(ROOT)} exists. Nothing changed.")
+    folder = PROBLEMS / difficulty / name
     for rel, text in PLACEHOLDERS.items():
         path = folder / rel
         path.parent.mkdir(parents=True, exist_ok=True)

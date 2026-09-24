@@ -54,7 +54,7 @@ The skill uses these scripts. You can also run them yourself:
 
 ```bash
 uv run python .claude/skills/add-problem/scripts/fetch.py <url-or-slug>  # print the problem as JSON
-uv run python .claude/skills/add-problem/scripts/scaffold.py pNNNN_<slug> # make placeholder files
+uv run python .claude/skills/add-problem/scripts/scaffold.py <difficulty> pNNNN_<slug> # make placeholder files
 ```
 
 ## Colors
@@ -73,13 +73,13 @@ FORCE_COLOR=1 uv run pytest # always show colors
 Show your code output for LeetCode example:
 
 ```bash
-uv run python -m problems.p0175_combine_two_tables._internal.main
+uv run python -m problems.easy.p0175_combine_two_tables._internal.main
 ```
 
 Show reference answer output:
 
 ```bash
-uv run python -m problems.p0175_combine_two_tables._internal.main solution
+uv run python -m problems.easy.p0175_combine_two_tables._internal.main solution
 ```
 
 Always use `-m`, run from project root. Run `main.py` directly → relative imports fail.

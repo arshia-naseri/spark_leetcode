@@ -17,8 +17,8 @@ uv run pytest --all                             # all tests
 uv run pytest p0175                             # one problem (name prefix or number: 175)
 uv run pytest p0175 --solution                  # one problem, reference answers
 uv run pytest -k "practice and case1"           # one case (-k turns off the default filter)
-uv run python -m problems.p0175_combine_two_tables._internal.main            # print practice output
-uv run python -m problems.p0175_combine_two_tables._internal.main solution   # print reference output
+uv run python -m problems.easy.p0175_combine_two_tables._internal.main            # print practice output
+uv run python -m problems.easy.p0175_combine_two_tables._internal.main solution   # print reference output
 uv run python reset.py p0175                    # reset practice.py to template (--all for all)
 ```
 
@@ -35,23 +35,25 @@ common/leetcode.py # check(): compares answers and makes LeetCode-style reports
 common/practice.py # makes/resets practice.py from practice_template.py
 reset.py           # CLI: reset practice.py files
 problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice.py files
-problems/pNNNN_<slug>/  # NO __init__.py here (namespace package)
-  practice.py      # the user's code; git-ignored; auto-made from template
-  question.md      # LeetCode problem statement, tables, example, run commands
-  _internal/
-    __init__.py
-    practice_template.py # committed blank stubs: solve() and solve_sql()
-    solution.py      # the reference answer
-    data.py          # schemas (DDL strings) and CASES
-    test_cases.py    # parametrized tests: cases x {practice, solution} x {dataframe, sql}
-    main.py          # runs the LeetCode example and calls .show()
+problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
+  pNNNN_<slug>/    # NO __init__.py here (namespace package)
+    practice.py      # the user's code; git-ignored; auto-made from template
+    question.md      # LeetCode problem statement, tables, example, run commands
+    _internal/
+      __init__.py
+      practice_template.py # committed blank stubs: solve() and solve_sql()
+      solution.py      # the reference answer
+      data.py          # schemas (DDL strings) and CASES
+      test_cases.py    # parametrized tests: cases x {practice, solution} x {dataframe, sql}
+      main.py          # runs the LeetCode example and calls .show()
 ```
 
 ## Rules
 
+- Problem folder location: `problems/<difficulty>/`, difficulty = LeetCode difficulty in lowercase (`easy`, `medium`, `hard`). Ex: `problems/easy/p0175_combine_two_tables`.
 - Problem folder name: `p` + 4-digit LeetCode number + `_` + snake_case slug. Ex: `p0175_combine_two_tables`. Must be valid Python identifier.
 - Problem folder top level: only `practice.py`, `question.md`, `_internal/`. Rest in `_internal/`.
-- Problem folder no `__init__.py` (namespace pkg); `_internal/` has one. pytest config `pythonpath = ["."]` + `consider_namespace_packages = true` → each test module unique full name, same-named `_internal` modules no collide.
+- Difficulty folder + problem folder no `__init__.py` (namespace pkg); `_internal/` has one. pytest config `pythonpath = ["."]` + `consider_namespace_packages = true` → each test module unique full name, same-named `_internal` modules no collide.
 - Relative imports in `_internal/`: `from .. import practice`, `from . import solution`.
 - Test file not `test_solution.py` — "solution" in name makes `-k solution` select all tests. Use `test_cases.py`.
 - No answer in `practice.py` or `practice_template.py`. Template stubs `raise NotImplementedError`. Stub = skipped, not failed.
@@ -82,8 +84,8 @@ problems/pNNNN_<slug>/  # NO __init__.py here (namespace package)
 
 Use `/add-problem <leetcode-url>` skill (`.claude/skills/add-problem/`). It fetches problem, makes placeholders, fills files. Manual steps:
 
-1. Make `problems/pNNNN_<slug>/_internal/` w/ empty `_internal/__init__.py`. No `__init__.py` in problem folder.
-2. Copy `data.py`, `test_cases.py`, `main.py` from `p0175_combine_two_tables/_internal/`. Change schemas, `CASES`, table names.
+1. Make `problems/<difficulty>/pNNNN_<slug>/_internal/` w/ empty `_internal/__init__.py`. No `__init__.py` in problem folder.
+2. Copy `data.py`, `test_cases.py`, `main.py` from `easy/p0175_combine_two_tables/_internal/`. Change schemas, `CASES`, table names.
 3. Write `_internal/solution.py` w/ answer, `_internal/practice_template.py` w/ stubs (docstring: title, "Read question.md", schemas).
 4. Write `question.md` LeetCode format: title, difficulty + URL, tables, task, examples, run commands.
 5. Run `uv run pytest pNNNN --all`. All `solution` tests pass, all `practice` tests skipped.
