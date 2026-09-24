@@ -1,0 +1,30 @@
+import pytest
+
+from common.leetcode import check
+
+from .. import practice
+from . import solution
+from .data import CASES, ORDERS_SCHEMA, OUTPUT_SCHEMA, PRODUCTS_SCHEMA
+
+MODULES = {"practice": practice, "solution": solution}
+
+
+@pytest.mark.parametrize("method", ["dataframe", "sql"])
+@pytest.mark.parametrize("module_name", MODULES)
+@pytest.mark.parametrize(
+    "products_rows, orders_rows, expected_rows",
+    CASES,
+    ids=[f"case{i}" for i in range(1, len(CASES) + 1)],
+)
+def test_case(spark, request, module_name, method, products_rows, orders_rows, expected_rows):
+    module = MODULES[module_name]
+    products = spark.createDataFrame(products_rows, PRODUCTS_SCHEMA)
+    orders = spark.createDataFrame(orders_rows, ORDERS_SCHEMA)
+    expected = spark.createDataFrame(expected_rows, OUTPUT_SCHEMA)
+
+    if method == "dataframe":
+        run = lambda: module.solve(products, orders)  # noqa: E731
+    else:
+        run = lambda: module.solve_sql(spark, products, orders)  # noqa: E731
+
+    check(request, {"Products": products, "Orders": orders}, run, expected)
