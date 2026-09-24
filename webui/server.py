@@ -2,10 +2,12 @@
 
 API:
     GET  /api/problems              list of problems
-    GET  /api/problems/<name>       question, code, solution, and test cases
-    PUT  /api/problems/<name>/code  save the code to practice.py
+    GET  /api/problems/<name>       question, code of each method, solution, and test cases
+    PUT  /api/problems/<name>/code  save the code to the practice file of the method
     POST /api/problems/<name>/run   save the code, run the tests, return the results
-    POST /api/problems/<name>/reset reset practice.py to the template
+    POST /api/problems/<name>/reset reset the practice file of the method to the template
+The body of PUT and POST has "method": "dataframe" (practice_dataframe.py) or "sql"
+(practice_sql.py).
     POST /api/problems/<name>/complete  code completions at a cursor position (jedi)
     POST /api/problems/<name>/describe  signature and docstring of one completion
 """
@@ -22,7 +24,7 @@ from pathlib import Path
 
 import jedi
 
-from common.practice import PRACTICE, TEMPLATE, problem_dirs, reset
+from common.practice import METHODS, PRACTICE, TEMPLATE, problem_dirs, reset
 
 from .cases import load_cases
 
@@ -49,21 +51,25 @@ def _title(problem: Path) -> str:
 
 
 def _summary(problem: Path) -> dict:
-    practice, template = problem / PRACTICE, problem / TEMPLATE
     return {
         "name": problem.name,
         "number": int(problem.name[1:5]),
         "title": _title(problem),
         "difficulty": problem.parent.name,
-        "attempted": practice.exists() and practice.read_text() != template.read_text(),
+        "attempted": any(_changed(problem, m) for m in METHODS),
     }
+
+
+def _changed(problem: Path, method: str) -> bool:
+    practice = problem / PRACTICE[method]
+    return practice.exists() and practice.read_text() != (problem / TEMPLATE[method]).read_text()
 
 
 def _details(problem: Path) -> dict:
     return {
         **_summary(problem),
         "question": (problem / "question.md").read_text(),
-        "code": (problem / PRACTICE).read_text(),
+        "code": {m: (problem / PRACTICE[m]).read_text() for m in METHODS},
         "solution": (problem / "_internal" / "solution.py").read_text(),
         "cases": load_cases(problem),
     }
@@ -93,7 +99,8 @@ def _run(problem: Path, method: str, count: int) -> dict:
 
 def _completions(problem: Path, body: dict) -> list:
     """Return the jedi completions at the cursor. line starts at 1, ch starts at 0."""
-    script = jedi.Script(body["code"], path=problem / PRACTICE, project=_jedi_project)
+    path = problem / PRACTICE[body["method"]]
+    script = jedi.Script(body["code"], path=path, project=_jedi_project)
     try:
         return script.complete(body["line"], body["ch"])
     except ValueError:  # The position is not in the code.
@@ -159,12 +166,21 @@ class Handler(BaseHTTPRequestHandler):
         # All other paths are pages of the single-page app.
         return self._send(HTTPStatus.OK, (STATIC / "index.html").read_bytes(), "text/html")
 
+    def _method(self, body: dict) -> str | None:
+        method = body.get("method")
+        if method not in METHODS:
+            self._json({"error": f"Bad method: {method}"}, HTTPStatus.BAD_REQUEST)
+            return None
+        return method
+
     def do_PUT(self):  # noqa: N802
         m = re.fullmatch(r"/api/problems/(\w+)/code", self.path)
         if not m:
             return self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
-        if problem := self._problem(m[1]):
-            (problem / PRACTICE).write_text(self._body()["code"])
+        problem = self._problem(m[1])
+        body = self._body()
+        if problem and (method := self._method(body)):
+            (problem / PRACTICE[method]).write_text(body["code"])
             return self._json({"saved": True})
         return None
 
@@ -175,19 +191,18 @@ class Handler(BaseHTTPRequestHandler):
         problem = self._problem(m[1])
         if problem is None:
             return None
-        if m[2] == "reset":
-            reset(problem)
-            return self._json({"code": (problem / PRACTICE).read_text()})
-
         body = self._body()
+        method = self._method(body)
+        if method is None:
+            return None
+        if m[2] == "reset":
+            reset(problem, (method,))
+            return self._json({"code": (problem / PRACTICE[method]).read_text()})
         if m[2] == "complete":
             return self._json(_complete(problem, body))
         if m[2] == "describe":
             return self._json(_describe(problem, body))
-        method = body.get("method", "dataframe")
-        if method not in ("dataframe", "sql"):
-            return self._json({"error": f"Bad method: {method}"}, HTTPStatus.BAD_REQUEST)
-        (problem / PRACTICE).write_text(body["code"])
+        (problem / PRACTICE[method]).write_text(body["code"])
         with _run_lock:
             return self._json(_run(problem, method, len(load_cases(problem))))
 

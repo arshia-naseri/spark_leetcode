@@ -55,14 +55,15 @@ uv run python -m webui --no-browser  # do not open the browser
 The home page shows all problems. Click a problem to open it in three panels:
 
 - Left: the question (`question.md`). The Solution tab shows the reference answer.
-- Top right: the editor for `practice.py`. The UI saves your code automatically.
+- Top right: the editor for the practice file of the selected method. The UI saves your code automatically.
   The editor shows completions for Python and PySpark (from `jedi`) when you type a name or `.`.
   Press Ctrl + Space to show them manually. The panel next to the list shows the signature and the docstring.
 - Bottom right: the test cases and the test results.
 
-Select `solve()` (DataFrame API) or `solve_sql()` (Spark SQL), then click **Run** (Ctrl/⌘ + Enter).
+Select `solve()` (DataFrame API, `practice_dataframe.py`) or `solve_sql()` (Spark SQL, `practice_sql.py`).
+The editor shows the file of the selected method. Then click **Run** (Ctrl/⌘ + Enter).
 Each run starts pytest, so a run takes approximately 6 s.
-The ↺ button resets `practice.py` to the template. This deletes your code in that file.
+The ↺ button resets the practice file of the selected method to its template. This deletes your code in that file.
 
 The UI runs pytest with `--leetcode-json PATH`. This option writes the result of each case as JSON:
 
@@ -112,9 +113,9 @@ uv run python -m problems.easy.p0175_combine_two_tables._internal.main solution
 
 Always use `-m`, run from project root. Run `main.py` directly → relative imports fail.
 
-## Reset your practice file
+## Reset your practice files
 
-Replace `practice.py` with blank template copy. Deletes your code in that file.
+Replace `practice_dataframe.py` and `practice_sql.py` with blank template copies. Deletes your code in these files.
 
 ```bash
 uv run python reset.py p0175          # one problem (a name prefix is sufficient)

@@ -1,6 +1,6 @@
 # Spark LeetCode
 
-Practice LeetCode DB problems w/ PySpark. Each problem: reference answer + blank practice template. User writes `practice.py`, git-ignored copy of template. Tests check both, show results LeetCode format.
+Practice LeetCode DB problems w/ PySpark. Each problem: reference answer + blank practice templates. User writes `practice_dataframe.py` (`solve()`) + `practice_sql.py` (`solve_sql()`), git-ignored copies of templates. Two files independent: error in one no stop other. Tests check both, show results LeetCode format.
 
 ## Setup
 
@@ -19,7 +19,7 @@ uv run pytest p0175 --solution                  # one problem, reference answers
 uv run pytest -k "practice and case1"           # one case (-k turns off the default filter)
 uv run python -m problems.easy.p0175_combine_two_tables._internal.main            # print practice output
 uv run python -m problems.easy.p0175_combine_two_tables._internal.main solution   # print reference output
-uv run python reset.py p0175                    # reset practice.py to template (--all for all)
+uv run python reset.py p0175                    # reset practice files to templates (--all for all)
 uv run python -m webui                          # web UI at http://127.0.0.1:8000
 ```
 
@@ -33,20 +33,22 @@ Always run `main.py` as module w/ `-m` from project root. Relative imports fail 
 conftest.py        # `spark` fixture; problem prefix args; --solution/--all filter; "Output" section
 common/spark.py    # get_spark(): shared SparkSession builder
 common/leetcode.py # check(): compares answers and makes LeetCode-style reports
-common/practice.py # makes/resets practice.py from practice_template.py
-reset.py           # CLI: reset practice.py files
+common/practice.py # makes/resets practice files from templates; load(): lazy import of one method's module
+reset.py           # CLI: reset practice files
 webui/             # local web UI (stdlib http.server): problem list, 3 panels, runs pytest
   server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset, jedi completions
   cases.py         # reads CASES tables w/ fake Spark (no JVM) for Testcase tab
   static/          # index.html, app.js, style.css. CodeMirror + marked from CDN
-problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice.py files
+problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice files
 problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
   pNNNN_<slug>/    # NO __init__.py here (namespace package)
-    practice.py      # the user's code; git-ignored; auto-made from template
+    practice_dataframe.py # the user's solve(); git-ignored; auto-made from template_dataframe.py
+    practice_sql.py  # the user's solve_sql(); git-ignored; auto-made from template_sql.py
     question.md      # LeetCode problem statement, tables, example, run commands
     _internal/
       __init__.py
-      practice_template.py # committed blank stubs: solve() and solve_sql()
+      template_dataframe.py # committed blank stub: solve()
+      template_sql.py  # committed blank stub: solve_sql()
       solution.py      # the reference answer
       data.py          # schemas (DDL strings) and CASES
       test_cases.py    # parametrized tests: cases x {practice, solution} x {dataframe, sql}
@@ -57,15 +59,15 @@ problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
 
 - Problem folder location: `problems/<difficulty>/`, difficulty = LeetCode difficulty in lowercase (`easy`, `medium`, `hard`). Ex: `problems/easy/p0175_combine_two_tables`.
 - Problem folder name: `p` + 4-digit LeetCode number + `_` + snake_case slug. Ex: `p0175_combine_two_tables`. Must be valid Python identifier.
-- Problem folder top level: only `practice.py`, `question.md`, `_internal/`. Rest in `_internal/`.
+- Problem folder top level: only `practice_dataframe.py`, `practice_sql.py`, `question.md`, `_internal/`. Rest in `_internal/`.
 - Difficulty folder + problem folder no `__init__.py` (namespace pkg); `_internal/` has one. pytest config `pythonpath = ["."]` + `consider_namespace_packages = true` → each test module unique full name, same-named `_internal` modules no collide.
-- Relative imports in `_internal/`: `from .. import practice`, `from . import solution`.
+- `test_cases.py` + `main.py` import practice/solution code via `common.practice.load(__package__, module_name, method)`, lazy inside `run`. No top-level import of practice files: syntax error in one file must not break other method. Error shows as `Runtime Error`.
 - Test file not `test_solution.py` — "solution" in name makes `-k solution` select all tests. Use `test_cases.py`.
-- No answer in `practice.py` or `practice_template.py`. Template stubs `raise NotImplementedError`. Stub = skipped, not failed.
-- `practice.py` in `.gitignore`. Never commit. Never edit template to hold user code.
-- `problems/__init__.py` copies template → `practice.py` if missing, before any problem import.
-- No show/change user code in `practice.py` unless asked.
-- Each module two funcs: `solve(<tables>)` DataFrame API, `solve_sql(spark, <tables>)` Spark SQL. User do one or both.
+- No answer in practice files or templates. No docstring/header comment in them. Template stubs `raise NotImplementedError`. Stub = skipped, not failed.
+- Practice files in `.gitignore`. Never commit. Never edit template to hold user code.
+- `problems/__init__.py` copies each template → practice file if missing, before any problem import.
+- No show/change user code in practice files unless asked.
+- `solution.py` has both funcs: `solve(<tables>)` DataFrame API, `solve_sql(spark, <tables>)` Spark SQL. Practice: `solve` only in `practice_dataframe.py`, `solve_sql` only in `practice_sql.py`. User do one or both.
 - In `solve_sql`, register inputs as temp views w/ LeetCode table names (e.g. `Person`) before `raise NotImplementedError`.
 - Always pass explicit DDL schema string to `createDataFrame`. Type inference fails on empty lists + all-`None` cols.
 - Test cases in `data.py` as `CASES`: list of tuples (input rows..., expected rows). Case 1 = LeetCode example. Add edge cases: empty tables, no matches, nulls.
@@ -92,7 +94,7 @@ Use `/add-problem <leetcode-url>` skill (`.claude/skills/add-problem/`). It fetc
 
 1. Make `problems/<difficulty>/pNNNN_<slug>/_internal/` w/ empty `_internal/__init__.py`. No `__init__.py` in problem folder.
 2. Copy `data.py`, `test_cases.py`, `main.py` from `easy/p0175_combine_two_tables/_internal/`. Change schemas, `CASES`, table names.
-3. Write `_internal/solution.py` w/ answer, `_internal/practice_template.py` w/ stubs (docstring: title, "Read question.md", schemas).
+3. Write `_internal/solution.py` w/ answer, `_internal/template_dataframe.py` + `_internal/template_sql.py` w/ stubs (copy p0175, no docstring).
 4. Write `question.md` LeetCode format: title, difficulty + URL, tables, task, examples, run commands.
 5. Run `uv run pytest pNNNN --all`. All `solution` tests pass, all `practice` tests skipped.
 

@@ -14,11 +14,11 @@ exists in a different difficulty folder. It makes:
   problems/<difficulty>/<folder>/_internal/test_cases.py
   problems/<difficulty>/<folder>/_internal/main.py
 Each placeholder has a TODO line. Replace all TODO lines with the problem data.
-It does not make practice_template.py or practice.py. Write
-_internal/practice_template.py when the stubs are complete.
-problems/__init__.py copies each template to a missing practice.py when a
-test run starts. A placeholder template would give a practice.py without
-stubs, and the practice tests would fail.
+It does not make the templates (_internal/template_dataframe.py,
+_internal/template_sql.py) or the practice files. Write the templates when the
+stubs are complete. problems/__init__.py copies each template to a missing
+practice file when a test run starts. A placeholder template would give a
+practice file without stubs, and the practice tests would fail.
 """
 
 import re
