@@ -2,7 +2,8 @@ import sys
 
 from common.spark import get_spark
 
-from . import practice, solution
+from .. import practice
+from . import solution
 from .data import ADDRESS_SCHEMA, EXAMPLE_ADDRESS, EXAMPLE_PERSON, PERSON_SCHEMA
 
 if __name__ == "__main__":

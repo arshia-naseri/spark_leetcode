@@ -28,3 +28,6 @@ derby.log
 .idea/
 .vscode/
 .DS_Store
+
+# Practice attempts. Each problem keeps a blank practice_template.py.
+problems/*/practice.py

@@ -13,4 +13,6 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["problems"]
+pythonpath = ["."]
+consider_namespace_packages = true
 addopts = "-q --show-capture=no -p no:warnings"

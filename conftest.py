@@ -1,6 +1,13 @@
 import pytest
 
+from common import leetcode
 from common.spark import get_spark
+
+
+def pytest_sessionstart(session):
+    # Use the same color setting as pytest (--color, NO_COLOR, FORCE_COLOR).
+    # A check of isatty() does not work, because pytest captures stdout.
+    leetcode.set_color(session.config.get_terminal_writer().hasmarkup)
 
 
 @pytest.fixture(scope="session")

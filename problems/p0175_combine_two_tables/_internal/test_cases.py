@@ -2,7 +2,8 @@ import pytest
 
 from common.leetcode import check
 
-from . import practice, solution
+from .. import practice
+from . import solution
 from .data import ADDRESS_SCHEMA, CASES, OUTPUT_SCHEMA, PERSON_SCHEMA
 
 MODULES = {"practice": practice, "solution": solution}
