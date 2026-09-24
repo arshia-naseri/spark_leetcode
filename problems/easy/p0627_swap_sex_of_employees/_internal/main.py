@@ -1,20 +1,20 @@
 import sys
 
+from common.practice import load
 from common.spark import get_spark
 
-from .. import practice
-from . import solution
 from .data import EXAMPLE_SALARY, SALARY_SCHEMA
 
 if __name__ == "__main__":
-    # Default: run practice.py. Give "solution" as an argument to run solution.py.
-    module = solution if sys.argv[1:] == ["solution"] else practice
+    # Default: run the practice files. Give "solution" as an argument to run solution.py.
+    module_name = "solution" if sys.argv[1:] == ["solution"] else "practice"
+    module = lambda method: load(__package__, module_name, method)  # noqa: E731
     spark = get_spark()
     salary = spark.createDataFrame(EXAMPLE_SALARY, SALARY_SCHEMA)
 
     for name, run in [
-        ("DataFrame API", lambda: module.solve(salary)),
-        ("SQL", lambda: module.solve_sql(spark, salary)),
+        ("DataFrame API", lambda: module("dataframe").solve(salary)),
+        ("SQL", lambda: module("sql").solve_sql(spark, salary)),
     ]:
         print(f"{name}:")
         try:

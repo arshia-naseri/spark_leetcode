@@ -13,13 +13,13 @@ def pytest_addoption(parser):
     group.addoption(
         "--solution",
         action="store_true",
-        help="Run only the reference answers. Default: only practice.py.",
+        help="Run only the reference answers. Default: only the practice files.",
     )
     group.addoption(
         "--all",
         action="store_true",
         dest="all_modules",
-        help="Run practice.py and the reference answers.",
+        help="Run the practice files and the reference answers.",
     )
     group.addoption(
         "--leetcode-json",

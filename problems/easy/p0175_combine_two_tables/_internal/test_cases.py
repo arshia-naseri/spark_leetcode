@@ -1,12 +1,11 @@
 import pytest
 
 from common.leetcode import check
+from common.practice import load
 
-from .. import practice
-from . import solution
 from .data import ADDRESS_SCHEMA, CASES, OUTPUT_SCHEMA, PERSON_SCHEMA
 
-MODULES = {"practice": practice, "solution": solution}
+MODULES = ["practice", "solution"]
 
 
 @pytest.mark.parametrize("method", ["dataframe", "sql"])
@@ -17,14 +16,15 @@ MODULES = {"practice": practice, "solution": solution}
     ids=[f"case{i}" for i in range(1, len(CASES) + 1)],
 )
 def test_case(spark, request, module_name, method, person_rows, address_rows, expected_rows):
-    module = MODULES[module_name]
+    # Import in run(). Then check() shows an error in the file as a Runtime Error.
+    module = lambda: load(__package__, module_name, method)  # noqa: E731
     person = spark.createDataFrame(person_rows, PERSON_SCHEMA)
     address = spark.createDataFrame(address_rows, ADDRESS_SCHEMA)
     expected = spark.createDataFrame(expected_rows, OUTPUT_SCHEMA)
 
     if method == "dataframe":
-        run = lambda: module.solve(person, address)  # noqa: E731
+        run = lambda: module().solve(person, address)  # noqa: E731
     else:
-        run = lambda: module.solve_sql(spark, person, address)  # noqa: E731
+        run = lambda: module().solve_sql(spark, person, address)  # noqa: E731
 
     check(request, {"Person": person, "Address": address}, run, expected)

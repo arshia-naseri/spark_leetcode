@@ -1,4 +1,4 @@
-"""Reset practice.py to the blank template.
+"""Reset the practice files (practice_dataframe.py, practice_sql.py) to the blank templates.
 
 Usage:
     uv run python reset.py p0175          # one problem (name or prefix)
@@ -27,7 +27,7 @@ def main(args: list[str]) -> int:
 
     for problem in problems:
         reset(problem)
-        print(f"Reset {problem.name}/practice.py")
+        print(f"Reset {problem.name}/practice_dataframe.py and practice_sql.py")
     return 0
 
 

@@ -71,7 +71,7 @@ function renderList() {
   $("#count").textContent = `${rows.length} / ${problems.length}`;
   $("#problem-list").innerHTML = rows.length ? rows.map((p) => `
     <a class="problem-row" href="/p/${p.name}">
-      <span class="dot-attempted" title="${p.attempted ? "Attempted: practice.py has changes" : ""}">${p.attempted ? "◐" : ""}</span>
+      <span class="dot-attempted" title="${p.attempted ? "Attempted: a practice file has changes" : ""}">${p.attempted ? "◐" : ""}</span>
       <span class="problem-title">${esc(p.title)}</span>
       <span class="diff-${p.difficulty}">${cap(p.difficulty)}</span>
     </a>`).join("") : `<div class="empty">No questions found.</div>`;
@@ -127,6 +127,7 @@ function initEditor() {
   });
   editor.on("change", (_cm, change) => {
     if (change.origin === "setValue") return;
+    if (current) current.code[method] = editor.getValue();
     $("#save-state").textContent = "Saving…";
     clearTimeout(saveTimer);
     saveTimer = setTimeout(save, 800);
@@ -149,7 +150,7 @@ function pythonHint(cm, callback) {
   if (!current) return callback(null);
   const cur = cm.getCursor();
   const code = cm.getValue();
-  api(`/api/problems/${current.name}/complete`, { method: "POST", body: { code, line: cur.line + 1, ch: cur.ch } })
+  api(`/api/problems/${current.name}/complete`, { method: "POST", body: { code, method, line: cur.line + 1, ch: cur.ch } })
     .then(({ from_ch, items }) => {
       if (!items.length) return callback(null);
       const data = {
@@ -186,7 +187,7 @@ function showDoc(item, el, code, cur) {
     if (!docCache.has(key)) {
       if (docCache.size > 200) docCache.clear();
       docCache.set(key, api(`/api/problems/${current.name}/describe`, {
-        method: "POST", body: { code, line: cur.line + 1, ch: cur.ch, name: item.text },
+        method: "POST", body: { code, method, line: cur.line + 1, ch: cur.ch, name: item.text },
       }).catch(() => null));
     }
     const info = await docCache.get(key);
@@ -212,7 +213,7 @@ async function save() {
   clearTimeout(saveTimer);
   saveTimer = null;
   if (!current) return;
-  await api(`/api/problems/${current.name}/code`, { method: "PUT", body: { code: editor.getValue() } });
+  await api(`/api/problems/${current.name}/code`, { method: "PUT", body: { code: editor.getValue(), method } });
   $("#save-state").textContent = "Saved";
 }
 
@@ -254,10 +255,7 @@ async function openProblem(name) {
   solutionView = null;
   selectTab("left", "description");
 
-  editor.setValue(p.code);
-  editor.clearHistory();
-  $("#save-state").textContent = "Saved";
-  setTimeout(() => editor.refresh(), 0);
+  showCode();
 
   renderTestcases(0);
   $("#result").innerHTML = `<p class="placeholder">Press <b>Run</b> (Ctrl/⌘ + Enter) to test your code.</p>`;
@@ -286,19 +284,35 @@ $("#reveal").addEventListener("click", () => {
 });
 
 $("#reset").addEventListener("click", async () => {
-  if (!current || !confirm("Reset practice.py to the blank template? Your code will be deleted.")) return;
+  if (!current || !confirm(`Reset ${FILES[method]} to the blank template? Your code in this file will be deleted.`)) return;
   clearTimeout(saveTimer);
   saveTimer = null;
-  const { code } = await api(`/api/problems/${current.name}/reset`, { method: "POST" });
+  const { code } = await api(`/api/problems/${current.name}/reset`, { method: "POST", body: { method } });
+  current.code[method] = code;
   editor.setValue(code);
   $("#save-state").textContent = "Saved";
 });
 
-// Method toggle: DataFrame API or Spark SQL.
+// Method toggle: DataFrame API or Spark SQL. Each method has its own practice file.
+const FILES = { dataframe: "practice_dataframe.py", sql: "practice_sql.py" };
+
 function setMethod(m) {
+  if (m === method && current) return;
+  flushSave();
   method = m;
   store("method", m);
   $$("#method button").forEach((b) => b.classList.toggle("active", b.dataset.method === m));
+  $("#lang").textContent = `Python · ${FILES[m]}`;
+  $("#reset").title = `Reset ${FILES[m]} to the template`;
+  if (current) showCode();
+}
+
+// Show the code of the selected method in the editor.
+function showCode() {
+  editor.setValue(current.code[method]);
+  editor.clearHistory();
+  $("#save-state").textContent = "Saved";
+  setTimeout(() => editor.refresh(), 0);
 }
 $("#method").addEventListener("click", (e) => {
   const btn = e.target.closest("button");
@@ -441,8 +455,8 @@ function renderResult(active) {
 
 // Remove the JVM stack trace from Spark errors. Keep the useful first part.
 function cleanError(text) {
-  // A syntax error in practice.py stops the collection. Show only the pytest "E" lines.
-  const start = text.search(/^E\s+File ".*practice\.py", line/m);
+  // A syntax error in a practice file stops the collection. Show only the pytest "E" lines.
+  const start = text.search(/^E\s+File ".*practice_\w+\.py", line/m);
   if (start >= 0) {
     return text.slice(start).split("\n").filter((l) => l.startsWith("E ")).map((l) => l.slice(4)).join("\n");
   }

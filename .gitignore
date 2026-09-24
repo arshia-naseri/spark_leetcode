@@ -29,5 +29,5 @@ derby.log
 .vscode/
 .DS_Store
 
-# Practice attempts. Each problem keeps a blank practice_template.py.
-problems/*/*/practice.py
+# Practice attempts. Each problem keeps blank templates in _internal/.
+problems/*/*/practice_*.py

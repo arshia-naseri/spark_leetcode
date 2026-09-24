@@ -9,7 +9,6 @@ session and a fake check() to get the tables. Spark does not start.
 import importlib
 import inspect
 import sys
-import types
 from pathlib import Path
 
 from common.leetcode import _cell
@@ -63,8 +62,6 @@ def problem_module(problem: Path) -> str:
 def load_cases(problem: Path) -> list[dict]:
     """Return the cases of a problem: [{"inputs": {name: table}, "expected": table}]."""
     package = problem_module(problem)
-    # Use an empty practice module. The user code can have errors, and it is not necessary.
-    sys.modules[f"{package}.practice"] = types.ModuleType(f"{package}.practice")
     try:
         tests = importlib.import_module(f"{package}._internal.test_cases")
         params = list(inspect.signature(tests.test_case).parameters)
