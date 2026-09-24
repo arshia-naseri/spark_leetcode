@@ -9,13 +9,16 @@ The script does not change a folder that exists. It stops if the problem
 exists in a different difficulty folder. It makes:
   problems/<difficulty>/<folder>/question.md
   problems/<difficulty>/<folder>/_internal/__init__.py            (empty)
-  problems/<difficulty>/<folder>/_internal/practice_template.py
   problems/<difficulty>/<folder>/_internal/solution.py
   problems/<difficulty>/<folder>/_internal/data.py
   problems/<difficulty>/<folder>/_internal/test_cases.py
   problems/<difficulty>/<folder>/_internal/main.py
 Each placeholder has a TODO line. Replace all TODO lines with the problem data.
-It does not make practice.py. problems/__init__.py makes it from the template.
+It does not make practice_template.py or practice.py. Write
+_internal/practice_template.py when the stubs are complete.
+problems/__init__.py copies each template to a missing practice.py when a
+test run starts. A placeholder template would give a practice.py without
+stubs, and the practice tests would fail.
 """
 
 import re
@@ -29,7 +32,6 @@ DIFFICULTIES = ("easy", "medium", "hard")
 PLACEHOLDERS = {
     "question.md": "# TODO: question title\n",
     "_internal/__init__.py": "",
-    "_internal/practice_template.py": '"""TODO: practice stubs."""\n',
     "_internal/solution.py": '"""TODO: reference solution."""\n',
     "_internal/data.py": "# TODO: schemas and CASES.\n",
     "_internal/test_cases.py": "# TODO: parametrized tests.\n",

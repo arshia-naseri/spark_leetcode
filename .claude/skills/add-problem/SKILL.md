@@ -31,11 +31,11 @@ Stop and tell the user when:
 uv run python .claude/skills/add-problem/scripts/scaffold.py <difficulty> <folder>
 ```
 
-Use `difficulty` and `folder` from the JSON. The script puts the folder in `problems/<difficulty>/` (lowercase: `easy`, `medium`, `hard`). The script makes the folder with one placeholder file for each required file. If the folder exists, the script stops. Then ask the user before you change the existing folder.
+Use `difficulty` and `folder` from the JSON. The script puts the folder in `problems/<difficulty>/` (lowercase: `easy`, `medium`, `hard`). The script makes the folder with one placeholder file for each required file, except `_internal/practice_template.py`. If the folder exists, the script stops. Then ask the user before you change the existing folder.
 
 ## Step 3: Fill the files
 
-Replace each placeholder. Keep the structure and style of the p0175 files. Write comments and docstrings in ASD-STE100 Simplified Technical English.
+Replace each placeholder and write `_internal/practice_template.py` as a new file. Keep the structure and style of the p0175 files. Write comments and docstrings in ASD-STE100 Simplified Technical English.
 
 ### Types
 
@@ -49,8 +49,10 @@ Use `schema` from the JSON for column names and types. Map SQL types to Spark DD
 | `DECIMAL(p,s)`            | `DECIMAL(p,s)` | `decimal.Decimal("1.50")`          |
 | `FLOAT`, `DOUBLE`         | `DOUBLE`       | `float`                            |
 | `DATE`                    | `DATE`         | `datetime.date(2020, 1, 1)`        |
-| `DATETIME`, `TIMESTAMP`   | `TIMESTAMP`    | `datetime.datetime(2020, 1, 1, 9, 0)` |
+| `DATETIME`, `TIMESTAMP`   | `TIMESTAMP_NTZ` | `datetime.datetime(2020, 1, 1, 9, 0)` |
 | `BOOL`, `TINYINT(1)`      | `BOOLEAN`      | `bool`                             |
+
+Use `TIMESTAMP_NTZ`, not `TIMESTAMP`. Spark reads a Python `datetime` with no time zone as local time and converts it to the UTC session time zone. The values then change by some hours.
 
 LeetCode shows `null` or `Null` in example tables. Use `None`.
 
@@ -61,7 +63,7 @@ The output schema is not in the JSON. Get the output column names from the examp
 1. `question.md`: same sections as p0175. Title `# <id>. <title>`, `Difficulty: <difficulty> · <<url>>`, `## Tables` (one markdown table for each input table and the description text), `## Task`, `## Example N` for each example (Input tables, Output table, Explanation if present), `## Run` with the two commands for this folder (`uv run pytest pNNNN` and the `main` module command with the `problems.<difficulty>.<folder>` path). Convert the ASCII `+---+` tables in `content` to markdown tables. Put column and table names in backticks. Remove HTML tags. Do not include the "result format is in the following example" line.
 2. `_internal/data.py`: `<TABLE>_SCHEMA` for each input table, `OUTPUT_SCHEMA`, `EXAMPLE_<TABLE>` and `EXAMPLE_OUTPUT` from example 1, and `CASES`. Put a comment above `CASES` that tells the tuple order. Case 1 is the LeetCode example. Add the other LeetCode examples as next cases (input rows from `examples`, output from `content`). Then add edge cases: empty tables, no matches, nulls, duplicates, ties. Add only edge cases that apply to this problem. Calculate each expected output by hand from the task text. Do not calculate it with the solution.
 3. `_internal/solution.py`: docstring (title, URL, short task text). `solve(<tables>)` with the DataFrame API and `solve_sql(spark, <tables>)` with Spark SQL. In `solve_sql`, register each input as a temp view with its LeetCode table name.
-4. `_internal/practice_template.py`: docstring with title, "Read question.md for the problem statement.", input schemas, output columns and order rule. Stubs `raise NotImplementedError`. `solve_sql` registers the temp views before `raise`. No answer in this file.
+4. `_internal/practice_template.py` (new file, write it only when complete): docstring with title, "Read question.md for the problem statement.", input schemas, output columns and order rule. Stubs `raise NotImplementedError`. `solve_sql` registers the temp views before `raise`. No answer in this file.
 5. `_internal/test_cases.py`: copy p0175. Change the parameter names, schemas and the `inputs` dict for `check()` (LeetCode table name to DataFrame). One parameter for each input table plus `expected_rows`.
 6. `_internal/main.py`: copy p0175. Change the imports and tables to use the `EXAMPLE_*` data.
 
