@@ -521,3 +521,69 @@ for (const [id, key] of [["#left", "split-v"], ["#code-panel", "split-h"]]) {
 
 window.addEventListener("beforeunload", flushSave);
 route();
+
+// ---------- Spark settings ----------
+
+let sparkDefaults = {};
+
+function settingsRow(key = "", value = "") {
+  const hint = key in sparkDefaults ? `Default: ${sparkDefaults[key]}` : "";
+  return `<div class="settings-row">
+    <input class="settings-key" placeholder="spark.some.key" value="${esc(key)}" spellcheck="false">
+    <input class="settings-value" placeholder="value" value="${esc(value)}" title="${esc(hint)}" spellcheck="false">
+    <button type="button" class="icon-btn settings-remove" title="Remove">${icon("Trash2")}</button>
+  </div>`;
+}
+
+function renderSettings(config) {
+  $("#settings-rows").innerHTML = Object.entries(config).map(([k, v]) => settingsRow(k, v)).join("");
+  $("#settings-error").hidden = true;
+}
+
+function settingsError(message) {
+  $("#settings-error").textContent = message;
+  $("#settings-error").hidden = false;
+}
+
+$$(".settings-btn").forEach((btn) => btn.addEventListener("click", async () => {
+  try {
+    const data = await api("/api/spark-config");
+    sparkDefaults = data.defaults;
+    renderSettings(data.config);
+    $("#settings").showModal();
+  } catch (err) {
+    alert(err.message);
+  }
+}));
+
+$("#settings-add").addEventListener("click", () => {
+  $("#settings-rows").insertAdjacentHTML("beforeend", settingsRow());
+  $("#settings-rows .settings-row:last-child .settings-key").focus();
+});
+
+$("#settings-rows").addEventListener("click", (e) => {
+  const btn = e.target.closest(".settings-remove");
+  if (btn) btn.closest(".settings-row").remove();
+});
+
+$("#settings-defaults").addEventListener("click", () => renderSettings(sparkDefaults));
+$("#settings-cancel").addEventListener("click", () => $("#settings").close());
+
+$("#settings-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const config = {};
+  for (const row of $$("#settings-rows .settings-row")) {
+    const key = row.querySelector(".settings-key").value.trim();
+    const value = row.querySelector(".settings-value").value.trim();
+    if (!key && !value) continue;
+    if (!key) return settingsError(`The value "${value}" has no key.`);
+    if (key in config) return settingsError(`The key ${key} is in the list two times.`);
+    config[key] = value;
+  }
+  try {
+    await api("/api/spark-config", { method: "PUT", body: { config } });
+    $("#settings").close();
+  } catch (err) {
+    settingsError(err.message);
+  }
+});

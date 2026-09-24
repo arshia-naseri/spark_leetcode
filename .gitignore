@@ -21,6 +21,9 @@ metastore_db/
 derby.log
 *.crc
 
+# Local Spark settings from the web UI
+spark_config.json
+
 # Environment files
 .env
 

@@ -31,12 +31,12 @@ Always run `main.py` as module w/ `-m` from project root. Relative imports fail 
 
 ```
 conftest.py        # `spark` fixture; problem prefix args; --solution/--all filter; "Output" section
-common/spark.py    # get_spark(): shared SparkSession builder
+common/spark.py    # get_spark(): shared SparkSession builder; DEFAULTS + spark_config.json overrides
 common/leetcode.py # check(): compares answers and makes LeetCode-style reports
 common/practice.py # makes/resets practice files from templates; load(): lazy import of one method's module
 reset.py           # CLI: reset practice files
 webui/             # local web UI (stdlib http.server): problem list, 3 panels, runs pytest
-  server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset, jedi completions
+  server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset, jedi completions, Spark settings
   cases.py         # reads CASES tables w/ fake Spark (no JVM) for Testcase tab
   static/          # index.html, app.js, style.css. CodeMirror + marked from CDN
 problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice files
@@ -86,7 +86,9 @@ problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
 
 ## Spark config
 
-`common/spark.py` sets: `local[1]`, `spark.sql.shuffle.partitions=1`, UI off, session tz UTC, log level ERROR. Driver mem default 1g. Most test time (~6 s) = JVM startup.
+`common/spark.py` `DEFAULTS`: `spark.master=local[1]`, `spark.sql.shuffle.partitions=1`, UI off, session tz UTC. Log level ERROR (fixed). Driver mem default 1g. Most test time (~6 s) = JVM startup.
+
+`spark_config.json` (project root, git-ignored) replaces `DEFAULTS` when it exists. Web UI gear button edits it (`GET`/`PUT /api/spark-config`). Save of `DEFAULTS` deletes file. Applies to next run + `uv run pytest` + `main.py`: each run = new JVM.
 
 ## Add a new problem
 

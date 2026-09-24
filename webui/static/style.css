@@ -212,3 +212,24 @@ li.CodeMirror-hint-active { background: #04395e; color: #fff; }
   .topbar-center { position: static; transform: none; }
   .nav-link { display: none; }
 }
+
+/* Spark settings dialog */
+.dialog {
+  width: min(640px, calc(100vw - 32px)); padding: 20px;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.dialog::backdrop { background: rgba(0, 0, 0, .6); }
+.dialog h2 { margin: 0 0 8px; font-size: 18px; }
+.dialog p { margin: 0 0 16px; font-size: 13px; }
+.settings-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 50vh; overflow-y: auto; }
+.settings-row { display: flex; gap: 8px; align-items: center; }
+.settings-row input {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: 6px 10px; font: 13px var(--mono); outline: none; min-width: 0;
+}
+.settings-row input:focus { border-color: #666; }
+.settings-key { flex: 3; }
+.settings-value { flex: 2; }
+#settings-error { margin-top: 12px; }
+.dialog-actions { display: flex; gap: 8px; margin-top: 20px; }

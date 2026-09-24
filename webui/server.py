@@ -10,6 +10,9 @@ The body of PUT and POST has "method": "dataframe" (practice_dataframe.py) or "s
 (practice_sql.py).
     POST /api/problems/<name>/complete  code completions at a cursor position (jedi)
     POST /api/problems/<name>/describe  signature and docstring of one completion
+    GET  /api/spark-config          Spark settings and the defaults
+    PUT  /api/spark-config          save the Spark settings ({"config": {key: value}})
+The Spark settings apply to the next run. Each run starts a new Spark JVM.
 """
 
 import json
@@ -25,6 +28,7 @@ from pathlib import Path
 import jedi
 
 from common.practice import METHODS, PRACTICE, TEMPLATE, problem_dirs, reset
+from common.spark import DEFAULTS, load_config, save_config
 
 from .cases import load_cases
 
@@ -125,6 +129,22 @@ def _describe(problem: Path, body: dict) -> dict:
     return {"signature": signatures[0] if signatures else "", "doc": doc[:3000]}
 
 
+def _spark_config() -> dict:
+    return {"config": load_config(), "defaults": DEFAULTS}
+
+
+def _bad_config(config) -> str | None:
+    """Return an error message if the Spark settings are not valid, else None."""
+    if not isinstance(config, dict):
+        return "The settings must be an object"
+    for key, value in config.items():
+        if not key.strip() or key != key.strip() or " " in key:
+            return f"Bad key: {key!r}"
+        if not isinstance(value, str):
+            return f"The value of {key} must be a string"
+    return None
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):  # noqa: A002
         pass
@@ -152,6 +172,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802
         path = self.path.split("?")[0]
+        if path == "/api/spark-config":
+            return self._json(_spark_config())
         if path == "/api/problems":
             return self._json([_summary(p) for p in _problems().values()])
         if m := re.fullmatch(r"/api/problems/(\w+)", path):
@@ -174,6 +196,12 @@ class Handler(BaseHTTPRequestHandler):
         return method
 
     def do_PUT(self):  # noqa: N802
+        if self.path == "/api/spark-config":
+            config = self._body().get("config")
+            if error := _bad_config(config):
+                return self._json({"error": error}, HTTPStatus.BAD_REQUEST)
+            save_config(config)
+            return self._json(_spark_config())
         m = re.fullmatch(r"/api/problems/(\w+)/code", self.path)
         if not m:
             return self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)

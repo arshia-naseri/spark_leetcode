@@ -22,6 +22,8 @@
   <div id="list-page" class="page" hidden>
     <header class="topbar">
       <a class="brand" href="/"><i data-lucide="zap"></i> Spark LeetCode</a>
+      <span class="spacer"></span>
+      <button class="icon-btn settings-btn" title="Spark settings"><i data-lucide="settings"></i></button>
     </header>
     <main class="list-main">
       <div class="list-tools">
@@ -51,6 +53,7 @@
         <button id="run" class="btn btn-run" title="Run tests (Ctrl/⌘ + Enter)"><i data-lucide="play"></i> Run</button>
       </div>
       <span class="spacer"></span>
+      <button class="icon-btn settings-btn" title="Spark settings"><i data-lucide="settings"></i></button>
     </header>
     <main class="workspace" id="workspace">
       <section class="panel" id="left">
@@ -91,6 +94,23 @@
       </div>
     </main>
   </div>
+
+  <!-- Spark settings -->
+  <dialog id="settings" class="dialog">
+    <form method="dialog" id="settings-form">
+      <h2>Spark settings</h2>
+      <p class="muted">These settings go to <code>SparkSession.builder.config()</code>. They apply to the next run and to <code>uv run pytest</code>. The file is <code>spark_config.json</code>.</p>
+      <div id="settings-rows" class="settings-rows"></div>
+      <button type="button" id="settings-add" class="btn"><i data-lucide="plus"></i> Add setting</button>
+      <div id="settings-error" class="error-box" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" id="settings-defaults" class="btn">Reset to defaults</button>
+        <span class="spacer"></span>
+        <button type="button" id="settings-cancel" class="btn">Cancel</button>
+        <button type="submit" class="btn btn-run">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="/static/app.js"></script>
 </body>
