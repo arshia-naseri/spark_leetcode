@@ -36,6 +36,12 @@ CASES = [
         [(11, "Sam", 4000), (13, "Emma", 4500)],
         [(11, 4000), (13, 4500)],
     ),
+    # A name that starts with a lowercase "m": no bonus. LeetCode uses MySQL,
+    # and MySQL compares 'M' and 'm' as equal.
+    (
+        [(1, "mia", 1000), (3, "nina", 2000)],
+        [(1, 0), (3, 2000)],
+    ),
     # Salary 0 and a large odd ID.
     (
         [(1, "Zed", 0), (99999, "Lee", 123456)],

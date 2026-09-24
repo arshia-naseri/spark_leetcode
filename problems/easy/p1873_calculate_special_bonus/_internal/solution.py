@@ -3,7 +3,7 @@
 https://leetcode.com/problems/calculate-special-bonus/
 
 Calculate the bonus of each employee. The bonus is the full salary if the
-employee_id is odd and the name does not start with 'M'. Otherwise the
+employee_id is odd and the name does not start with 'M' or 'm'. Otherwise the
 bonus is 0. Order the result by employee_id.
 """
 
@@ -12,7 +12,7 @@ from pyspark.sql import functions as F
 
 
 def solve(employees: DataFrame) -> DataFrame:
-    gets_bonus = (F.col("employee_id") % 2 == 1) & ~F.col("name").startswith("M")
+    gets_bonus = (F.col("employee_id") % 2 == 1) & ~F.col("name").ilike("M%")
     return (
         employees
         .select(
@@ -30,7 +30,7 @@ def solve_sql(spark: SparkSession, employees: DataFrame) -> DataFrame:
         SELECT
             employee_id,
             CASE
-                WHEN employee_id % 2 = 1 AND name NOT LIKE 'M%' THEN salary
+                WHEN employee_id % 2 = 1 AND name NOT ILIKE 'M%' THEN salary
                 ELSE 0
             END AS bonus
         FROM Employees
