@@ -6,13 +6,13 @@ Difficulty: Easy · <https://leetcode.com/problems/triangle-judgement/>
 
 **Triangle**
 
-| Column Name | Type |
-| ----------- | ---- |
-| x           | int  |
-| y           | int  |
-| z           | int  |
-
-In SQL, (`x`, `y`, `z`) is the primary key column for this table. Each row of this table contains the lengths of three line segments.
+> | Column Name | Type |
+> | ----------- | ---- |
+> | x           | int  |
+> | y           | int  |
+> | z           | int  |
+>
+> In SQL, (`x`, `y`, `z`) is the primary key column for this table. Each row of this table contains the lengths of three line segments.
 
 ## Task
 
@@ -22,21 +22,21 @@ Return the result table in **any order**.
 
 ## Example 1
 
-**Input:**
-
-Triangle table:
-
-| x  | y  | z  |
-| -- | -- | -- |
-| 13 | 15 | 30 |
-| 10 | 20 | 15 |
-
-**Output:**
-
-| x  | y  | z  | triangle |
-| -- | -- | -- | -------- |
-| 13 | 15 | 30 | No       |
-| 10 | 20 | 15 | Yes      |
+> **Input:**
+>
+> Triangle table:
+>
+> | x  | y  | z  |
+> | -- | -- | -- |
+> | 13 | 15 | 30 |
+> | 10 | 20 | 15 |
+>
+> **Output:**
+>
+> | x  | y  | z  | triangle |
+> | -- | -- | -- | -------- |
+> | 13 | 15 | 30 | No       |
+> | 10 | 20 | 15 | Yes      |
 
 ## Run
 

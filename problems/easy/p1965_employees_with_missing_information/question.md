@@ -6,21 +6,21 @@ Difficulty: Easy · <https://leetcode.com/problems/employees-with-missing-inform
 
 **Employees**
 
-| Column Name | Type    |
-| ----------- | ------- |
-| employee_id | int     |
-| name        | varchar |
-
-`employee_id` is the column with unique values for this table. Each row of this table indicates the name of the employee whose ID is `employee_id`.
+> | Column Name | Type    |
+> | ----------- | ------- |
+> | employee_id | int     |
+> | name        | varchar |
+>
+> `employee_id` is the column with unique values for this table. Each row of this table indicates the name of the employee whose ID is `employee_id`.
 
 **Salaries**
 
-| Column Name | Type |
-| ----------- | ---- |
-| employee_id | int  |
-| salary      | int  |
-
-`employee_id` is the column with unique values for this table. Each row of this table indicates the salary of the employee whose ID is `employee_id`.
+> | Column Name | Type |
+> | ----------- | ---- |
+> | employee_id | int  |
+> | salary      | int  |
+>
+> `employee_id` is the column with unique values for this table. Each row of this table indicates the salary of the employee whose ID is `employee_id`.
 
 ## Task
 
@@ -33,38 +33,38 @@ Return the result table ordered by `employee_id` **in ascending order**.
 
 ## Example 1
 
-**Input:**
-
-Employees table:
-
-| employee_id | name     |
-| ----------- | -------- |
-| 2           | Crew     |
-| 4           | Haven    |
-| 5           | Kristian |
-
-Salaries table:
-
-| employee_id | salary |
-| ----------- | ------ |
-| 5           | 76071  |
-| 1           | 22517  |
-| 4           | 63539  |
-
-**Output:**
-
-| employee_id |
-| ----------- |
-| 1           |
-| 2           |
-
-**Explanation:**
-
-Employees 1, 2, 4, and 5 are working at this company.
-
-The name of employee 1 is missing.
-
-The salary of employee 2 is missing.
+> **Input:**
+>
+> Employees table:
+>
+> | employee_id | name     |
+> | ----------- | -------- |
+> | 2           | Crew     |
+> | 4           | Haven    |
+> | 5           | Kristian |
+>
+> Salaries table:
+>
+> | employee_id | salary |
+> | ----------- | ------ |
+> | 5           | 76071  |
+> | 1           | 22517  |
+> | 4           | 63539  |
+>
+> **Output:**
+>
+> | employee_id |
+> | ----------- |
+> | 1           |
+> | 2           |
+>
+> **Explanation:**
+>
+> Employees 1, 2, 4, and 5 are working at this company.
+>
+> The name of employee 1 is missing.
+>
+> The salary of employee 2 is missing.
 
 ## Run
 

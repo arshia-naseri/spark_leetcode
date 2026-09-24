@@ -6,12 +6,12 @@ Difficulty: Easy · <https://leetcode.com/problems/customer-placing-the-largest-
 
 **Orders**
 
-| Column Name     | Type |
-| --------------- | ---- |
-| order_number    | int  |
-| customer_number | int  |
-
-`order_number` is the primary key (column with unique values) for this table. This table contains information about the order ID and the customer ID.
+> | Column Name     | Type |
+> | --------------- | ---- |
+> | order_number    | int  |
+> | customer_number | int  |
+>
+> `order_number` is the primary key (column with unique values) for this table. This table contains information about the order ID and the customer ID.
 
 ## Task
 
@@ -25,26 +25,26 @@ Note: the tests in this repo include the follow-up. If two or more customers hav
 
 ## Example 1
 
-**Input:**
-
-Orders table:
-
-| order_number | customer_number |
-| ------------ | --------------- |
-| 1            | 1               |
-| 2            | 2               |
-| 3            | 3               |
-| 4            | 3               |
-
-**Output:**
-
-| customer_number |
-| --------------- |
-| 3               |
-
-**Explanation:**
-
-The customer with number 3 has two orders, which is greater than either customer 1 or 2 because each of them only has one order. So the result is `customer_number` 3.
+> **Input:**
+>
+> Orders table:
+>
+> | order_number | customer_number |
+> | ------------ | --------------- |
+> | 1            | 1               |
+> | 2            | 2               |
+> | 3            | 3               |
+> | 4            | 3               |
+>
+> **Output:**
+>
+> | customer_number |
+> | --------------- |
+> | 3               |
+>
+> **Explanation:**
+>
+> The customer with number 3 has two orders, which is greater than either customer 1 or 2 because each of them only has one order. So the result is `customer_number` 3.
 
 ## Run
 
