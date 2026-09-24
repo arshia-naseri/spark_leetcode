@@ -1,0 +1,78 @@
+# Commands
+
+Run all commands from project root.
+
+## Tests
+
+Test only your code:
+
+```bash
+uv run pytest -k practice
+```
+
+Test only reference answers:
+
+```bash
+uv run pytest -k solution
+```
+
+Run all tests:
+
+```bash
+uv run pytest
+```
+
+Run tests for one problem:
+
+```bash
+uv run pytest problems/p0175_combine_two_tables
+```
+
+Run one case:
+
+```bash
+uv run pytest -k "practice and case1"
+```
+
+New problem: run its tests. All `solution` tests must pass, all `practice` tests must skip:
+
+```bash
+uv run pytest problems/pNNNN_<slug>
+```
+
+## Colors
+
+Reports use same color setting as pytest.
+
+```bash
+uv run pytest -k practice --color=yes   # always show colors
+uv run pytest -k practice --color=no    # never show colors
+NO_COLOR=1 uv run pytest -k practice    # never show colors
+FORCE_COLOR=1 uv run pytest -k practice # always show colors
+```
+
+## Show the output of the example
+
+Show your code output for LeetCode example:
+
+```bash
+uv run python -m problems.p0175_combine_two_tables._internal.main
+```
+
+Show reference answer output:
+
+```bash
+uv run python -m problems.p0175_combine_two_tables._internal.main solution
+```
+
+Always use `-m`, run from project root. Run `main.py` directly → relative imports fail.
+
+## Reset your practice file
+
+Replace `practice.py` with blank template copy. Deletes your code in that file.
+
+```bash
+uv run python reset.py p0175          # one problem (a name prefix is sufficient)
+uv run python reset.py p0175 p0181    # more than one problem
+uv run python reset.py --all          # all problems
+```

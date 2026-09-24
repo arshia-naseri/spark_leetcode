@@ -21,6 +21,8 @@ uv run python -m problems.p0175_combine_two_tables._internal.main solution   # p
 uv run python reset.py p0175                    # reset practice.py to template (--all for all)
 ```
 
+Full list w/ explanations: `docs/commands.md`. Keep it in sync when commands change.
+
 Always run `main.py` as module w/ `-m` from project root. Relative imports fail if file run direct.
 
 ## Layout
