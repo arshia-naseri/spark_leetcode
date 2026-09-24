@@ -115,7 +115,15 @@ function initEditor() {
       "Ctrl-Enter": run,
       "Cmd-S": flushSave,
       "Ctrl-S": flushSave,
+      "Ctrl-Space": showHints,
     },
+  });
+  // Show completions while the user types a name or after a ".".
+  editor.on("inputRead", (cm, change) => {
+    if (cm.state.completionActive || change.text.length !== 1) return;
+    if (!/[A-Za-z_.]$/.test(change.text[0])) return;
+    const type = cm.getTokenAt(cm.getCursor()).type || "";
+    if (!/string|comment/.test(type)) showHints(cm);
   });
   editor.on("change", (_cm, change) => {
     if (change.origin === "setValue") return;
@@ -127,6 +135,77 @@ function initEditor() {
     const c = cm.getCursor();
     $("#cursor").textContent = `Ln ${c.line + 1}, Col ${c.ch + 1}`;
   });
+}
+
+// ---------- Completions (jedi on the server) ----------
+
+const KIND_LETTER = { function: "ƒ", class: "C", module: "M", instance: "v", param: "p", statement: "v", keyword: "k", property: "p", path: "/" };
+
+function showHints(cm) {
+  cm.showHint({ hint: pythonHint, completeSingle: false });
+}
+
+function pythonHint(cm, callback) {
+  if (!current) return callback(null);
+  const cur = cm.getCursor();
+  const code = cm.getValue();
+  api(`/api/problems/${current.name}/complete`, { method: "POST", body: { code, line: cur.line + 1, ch: cur.ch } })
+    .then(({ from_ch, items }) => {
+      if (!items.length) return callback(null);
+      const data = {
+        list: items.map((it) => ({ text: it.name, kind: it.type, render: renderHint })),
+        from: CodeMirror.Pos(cur.line, from_ch),
+        to: CodeMirror.Pos(cur.line, cur.ch),
+      };
+      CodeMirror.on(data, "select", (item, el) => showDoc(item, el, code, cur));
+      CodeMirror.on(data, "close", hideDoc);
+      callback(data);
+    })
+    .catch(() => callback(null));
+}
+pythonHint.async = true;
+
+function renderHint(el, _data, item) {
+  el.innerHTML = `<span class="hint-kind kind-${esc(item.kind)}">${KIND_LETTER[item.kind] || "·"}</span>${esc(item.text)}`;
+}
+
+// The signature and docstring of the selected completion, next to the list.
+let docTimer = null;
+const docCache = new Map();
+
+function hideDoc() {
+  clearTimeout(docTimer);
+  const box = $("#hint-doc");
+  if (box) box.remove();
+}
+
+function showDoc(item, el, code, cur) {
+  clearTimeout(docTimer);
+  docTimer = setTimeout(async () => {
+    const key = `${cur.line}:${cur.ch}:${code.length}:${item.text}`;
+    if (!docCache.has(key)) {
+      if (docCache.size > 200) docCache.clear();
+      docCache.set(key, api(`/api/problems/${current.name}/describe`, {
+        method: "POST", body: { code, line: cur.line + 1, ch: cur.ch, name: item.text },
+      }).catch(() => null));
+    }
+    const info = await docCache.get(key);
+    const list = el.parentNode;
+    if (!info || (!info.signature && !info.doc) || !list.isConnected || !el.classList.contains("CodeMirror-hint-active")) return hideDoc();
+    let box = $("#hint-doc");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "hint-doc";
+      document.body.appendChild(box);
+    }
+    box.innerHTML = (info.signature ? `<div class="hint-sig">${esc(info.signature)}</div>` : "")
+      + (info.doc ? `<div class="hint-body">${esc(info.doc)}</div>` : "");
+    const rect = list.getBoundingClientRect();
+    const right = rect.right + 4 + 420 <= window.innerWidth;
+    box.style.top = `${rect.top}px`;
+    box.style.left = right ? `${rect.right + 4}px` : "";
+    box.style.right = right ? "" : `${window.innerWidth - rect.left + 4}px`;
+  }, 120);
 }
 
 async function save() {

@@ -5,7 +5,7 @@ Practice LeetCode DB problems w/ PySpark. Each problem: reference answer + blank
 ## Setup
 
 - `uv` for all package mgmt + commands. No `pip`.
-- Python 3.10+, PySpark 4.2, pytest 9 (dev group).
+- Python 3.10+, PySpark 4.2, jedi (web UI completions), pytest 9 (dev group).
 - PySpark 4 needs Java 17+. Machine has Java 21.
 
 ## Commands
@@ -36,7 +36,7 @@ common/leetcode.py # check(): compares answers and makes LeetCode-style reports
 common/practice.py # makes/resets practice.py from practice_template.py
 reset.py           # CLI: reset practice.py files
 webui/             # local web UI (stdlib http.server): problem list, 3 panels, runs pytest
-  server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset
+  server.py        # API: list/get problems, save code, run tests (pytest --leetcode-json), reset, jedi completions
   cases.py         # reads CASES tables w/ fake Spark (no JVM) for Testcase tab
   static/          # index.html, app.js, style.css. CodeMirror + marked from CDN
 problems/__init__.py  # sets sys.dont_write_bytecode; makes missing practice.py files

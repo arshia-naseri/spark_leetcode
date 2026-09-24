@@ -56,6 +56,8 @@ The home page shows all problems. Click a problem to open it in three panels:
 
 - Left: the question (`question.md`). The Solution tab shows the reference answer.
 - Top right: the editor for `practice.py`. The UI saves your code automatically.
+  The editor shows completions for Python and PySpark (from `jedi`) when you type a name or `.`.
+  Press Ctrl + Space to show them manually. The panel next to the list shows the signature and the docstring.
 - Bottom right: the test cases and the test results.
 
 Select `solve()` (DataFrame API) or `solve_sql()` (Spark SQL), then click **Run** (Ctrl/⌘ + Enter).

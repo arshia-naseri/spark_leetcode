@@ -6,6 +6,8 @@ API:
     PUT  /api/problems/<name>/code  save the code to practice.py
     POST /api/problems/<name>/run   save the code, run the tests, return the results
     POST /api/problems/<name>/reset reset practice.py to the template
+    POST /api/problems/<name>/complete  code completions at a cursor position (jedi)
+    POST /api/problems/<name>/describe  signature and docstring of one completion
 """
 
 import json
@@ -18,6 +20,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import jedi
+
 from common.practice import PRACTICE, TEMPLATE, problem_dirs, reset
 
 from .cases import load_cases
@@ -29,6 +33,10 @@ RUN_TIMEOUT_S = 300
 
 # Only one test run at a time. Each run starts its own Spark JVM.
 _run_lock = threading.Lock()
+# jedi is not thread-safe. Its cache makes the next completions fast.
+_jedi_lock = threading.Lock()
+_jedi_project = jedi.Project(ROOT)
+MAX_COMPLETIONS = 200
 
 
 def _problems() -> dict[str, Path]:
@@ -83,6 +91,33 @@ def _run(problem: Path, method: str, count: int) -> dict:
     return data
 
 
+def _completions(problem: Path, body: dict) -> list:
+    """Return the jedi completions at the cursor. line starts at 1, ch starts at 0."""
+    script = jedi.Script(body["code"], path=problem / PRACTICE, project=_jedi_project)
+    try:
+        return script.complete(body["line"], body["ch"])
+    except ValueError:  # The position is not in the code.
+        return []
+
+
+def _complete(problem: Path, body: dict) -> dict:
+    with _jedi_lock:
+        found = _completions(problem, body)[:MAX_COMPLETIONS]
+        prefix = found[0].get_completion_prefix_length() if found else 0
+        items = [{"name": c.name, "type": c.type} for c in found]
+    return {"from_ch": body["ch"] - prefix, "items": items}
+
+
+def _describe(problem: Path, body: dict) -> dict:
+    with _jedi_lock:
+        match = next((c for c in _completions(problem, body) if c.name == body["name"]), None)
+        if match is None:
+            return {"signature": "", "doc": ""}
+        signatures = [s.to_string() for s in match.get_signatures()]
+        doc = match.docstring(raw=True).strip()
+    return {"signature": signatures[0] if signatures else "", "doc": doc[:3000]}
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):  # noqa: A002
         pass
@@ -134,7 +169,7 @@ class Handler(BaseHTTPRequestHandler):
         return None
 
     def do_POST(self):  # noqa: N802
-        m = re.fullmatch(r"/api/problems/(\w+)/(run|reset)", self.path)
+        m = re.fullmatch(r"/api/problems/(\w+)/(run|reset|complete|describe)", self.path)
         if not m:
             return self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
         problem = self._problem(m[1])
@@ -145,6 +180,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"code": (problem / PRACTICE).read_text()})
 
         body = self._body()
+        if m[2] == "complete":
+            return self._json(_complete(problem, body))
+        if m[2] == "describe":
+            return self._json(_describe(problem, body))
         method = body.get("method", "dataframe")
         if method not in ("dataframe", "sql"):
             return self._json({"error": f"Bad method: {method}"}, HTTPStatus.BAD_REQUEST)
