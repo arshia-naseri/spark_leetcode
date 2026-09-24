@@ -58,7 +58,7 @@ The output schema is not in the JSON. Get the output column names from the examp
 
 ### Files
 
-1. `question.md`: same sections as p0175. Title `# <id>. <title>`, `Difficulty: <difficulty> · <<url>>`, `## Tables` (one markdown table for each input table and the description text), `## Task`, `## Example N` for each example (Input tables, Output table, Explanation if present), `## Run` with the two commands for this folder. Convert the ASCII `+---+` tables in `content` to markdown tables. Put column and table names in backticks. Remove HTML tags. Do not include the "result format is in the following example" line.
+1. `question.md`: same sections as p0175. Title `# <id>. <title>`, `Difficulty: <difficulty> · <<url>>`, `## Tables` (one markdown table for each input table and the description text), `## Task`, `## Example N` for each example (Input tables, Output table, Explanation if present), `## Run` with the two commands for this folder (`uv run pytest pNNNN` and the `main` module command). Convert the ASCII `+---+` tables in `content` to markdown tables. Put column and table names in backticks. Remove HTML tags. Do not include the "result format is in the following example" line.
 2. `_internal/data.py`: `<TABLE>_SCHEMA` for each input table, `OUTPUT_SCHEMA`, `EXAMPLE_<TABLE>` and `EXAMPLE_OUTPUT` from example 1, and `CASES`. Put a comment above `CASES` that tells the tuple order. Case 1 is the LeetCode example. Add the other LeetCode examples as next cases (input rows from `examples`, output from `content`). Then add edge cases: empty tables, no matches, nulls, duplicates, ties. Add only edge cases that apply to this problem. Calculate each expected output by hand from the task text. Do not calculate it with the solution.
 3. `_internal/solution.py`: docstring (title, URL, short task text). `solve(<tables>)` with the DataFrame API and `solve_sql(spark, <tables>)` with Spark SQL. In `solve_sql`, register each input as a temp view with its LeetCode table name.
 4. `_internal/practice_template.py`: docstring with title, "Read question.md for the problem statement.", input schemas, output columns and order rule. Stubs `raise NotImplementedError`. `solve_sql` registers the temp views before `raise`. No answer in this file.
@@ -70,7 +70,7 @@ Argument names: snake_case of the table name (`Person` gives `person`, `MyNumber
 ## Step 4: Verify
 
 ```bash
-uv run pytest problems/<folder>
+uv run pytest problems/<folder> --all
 ```
 
 All `solution` tests must pass. All `practice` tests must skip. If a solution test fails, look at the report. Find if the solution or the expected rows are wrong. Fix the incorrect one. Do not change the expected rows only to make the test pass.

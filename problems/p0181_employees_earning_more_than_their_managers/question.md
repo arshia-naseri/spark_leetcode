@@ -47,6 +47,6 @@ Joe is the only employee who earns more than his manager.
 ## Run
 
 ```bash
-uv run pytest problems/p0181_employees_earning_more_than_their_managers -k practice
+uv run pytest p0181
 uv run python -m problems.p0181_employees_earning_more_than_their_managers._internal.main
 ```

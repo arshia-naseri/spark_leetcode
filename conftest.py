@@ -1,7 +1,58 @@
+from pathlib import Path
+
 import pytest
 
 from common import leetcode
+from common.practice import problem_dirs
 from common.spark import get_spark
+
+
+def pytest_addoption(parser):
+    group = parser.getgroup("leetcode")
+    group.addoption(
+        "--solution",
+        action="store_true",
+        help="Run only the reference answers. Default: only practice.py.",
+    )
+    group.addoption(
+        "--all",
+        action="store_true",
+        dest="all_modules",
+        help="Run practice.py and the reference answers.",
+    )
+
+
+def _expand(arg: str) -> list[str]:
+    """Change a problem name prefix (p0181 or 181) to the problem folder path."""
+    if arg.startswith("-") or Path(arg.split("::")[0]).exists():
+        return [arg]
+    prefix = f"p{int(arg):04d}" if arg.isdigit() else arg
+    matches = [str(p) for p in problem_dirs() if p.name.startswith(prefix)]
+    return matches or [arg]
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_configure(config):
+    # Let "uv run pytest p0181" select the folder of problem 181.
+    config.args = [path for arg in config.args for path in _expand(arg)]
+
+
+def pytest_collection_modifyitems(config, items):
+    """Keep only practice tests, or only solution tests with --solution.
+
+    Do not filter when -k or --all is given.
+    """
+    if config.getoption("keyword") or config.getoption("all_modules"):
+        return
+    keep = "solution" if config.getoption("solution") else "practice"
+    selected, deselected = [], []
+    for item in items:
+        callspec = getattr(item, "callspec", None)
+        module_name = callspec.params.get("module_name") if callspec else None
+        (deselected if module_name not in (None, keep) else selected).append(item)
+    if deselected:
+        config.hook.pytest_deselected(items=deselected)
+        items[:] = selected
 
 
 def pytest_sessionstart(session):

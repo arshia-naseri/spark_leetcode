@@ -11,11 +11,12 @@ Practice LeetCode DB problems w/ PySpark. Each problem: reference answer + blank
 ## Commands
 
 ```bash
-uv run pytest                                   # all tests
-uv run pytest -k practice                       # the user's practice code only
-uv run pytest -k solution                       # the reference answers only
-uv run pytest problems/p0175_combine_two_tables # one problem
-uv run pytest -k "practice and case1"           # one case
+uv run pytest                                   # practice code only (default)
+uv run pytest --solution                        # the reference answers only
+uv run pytest --all                             # all tests
+uv run pytest p0175                             # one problem (name prefix or number: 175)
+uv run pytest p0175 --solution                  # one problem, reference answers
+uv run pytest -k "practice and case1"           # one case (-k turns off the default filter)
 uv run python -m problems.p0175_combine_two_tables._internal.main            # print practice output
 uv run python -m problems.p0175_combine_two_tables._internal.main solution   # print reference output
 uv run python reset.py p0175                    # reset practice.py to template (--all for all)
@@ -28,7 +29,7 @@ Always run `main.py` as module w/ `-m` from project root. Relative imports fail 
 ## Layout
 
 ```
-conftest.py        # session `spark` fixture; prints the "Output" section for passed tests
+conftest.py        # `spark` fixture; problem prefix args; --solution/--all filter; "Output" section
 common/spark.py    # get_spark(): shared SparkSession builder
 common/leetcode.py # check(): compares answers and makes LeetCode-style reports
 common/practice.py # makes/resets practice.py from practice_template.py
@@ -85,7 +86,7 @@ Use `/add-problem <leetcode-url>` skill (`.claude/skills/add-problem/`). It fetc
 2. Copy `data.py`, `test_cases.py`, `main.py` from `p0175_combine_two_tables/_internal/`. Change schemas, `CASES`, table names.
 3. Write `_internal/solution.py` w/ answer, `_internal/practice_template.py` w/ stubs (docstring: title, "Read question.md", schemas).
 4. Write `question.md` LeetCode format: title, difficulty + URL, tables, task, examples, run commands.
-5. Run `uv run pytest problems/pNNNN_<slug>`. All `solution` tests pass, all `practice` tests skipped.
+5. Run `uv run pytest pNNNN --all`. All `solution` tests pass, all `practice` tests skipped.
 
 ## Style
 

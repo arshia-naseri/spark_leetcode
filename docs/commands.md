@@ -4,31 +4,33 @@ Run all commands from project root.
 
 ## Tests
 
-Test only your code:
-
-```bash
-uv run pytest -k practice
-```
-
-Test only reference answers:
-
-```bash
-uv run pytest -k solution
-```
-
-Run all tests:
+Test only your code (default):
 
 ```bash
 uv run pytest
 ```
 
-Run tests for one problem:
+Test only reference answers:
 
 ```bash
-uv run pytest problems/p0175_combine_two_tables
+uv run pytest --solution
 ```
 
-Run one case:
+Run all tests (your code and reference answers):
+
+```bash
+uv run pytest --all
+```
+
+Run tests for one problem. Give the folder name, a prefix of it, or the problem number:
+
+```bash
+uv run pytest p0175
+uv run pytest 175
+uv run pytest p0175 --solution
+```
+
+Run one case. When you give `-k`, the default practice filter is off:
 
 ```bash
 uv run pytest -k "practice and case1"
@@ -37,7 +39,7 @@ uv run pytest -k "practice and case1"
 New problem: run its tests. All `solution` tests must pass, all `practice` tests must skip:
 
 ```bash
-uv run pytest problems/pNNNN_<slug>
+uv run pytest pNNNN --all
 ```
 
 ## Add a problem
@@ -60,10 +62,10 @@ uv run python .claude/skills/add-problem/scripts/scaffold.py pNNNN_<slug> # make
 Reports use same color setting as pytest.
 
 ```bash
-uv run pytest -k practice --color=yes   # always show colors
-uv run pytest -k practice --color=no    # never show colors
-NO_COLOR=1 uv run pytest -k practice    # never show colors
-FORCE_COLOR=1 uv run pytest -k practice # always show colors
+uv run pytest --color=yes   # always show colors
+uv run pytest --color=no    # never show colors
+NO_COLOR=1 uv run pytest    # never show colors
+FORCE_COLOR=1 uv run pytest # always show colors
 ```
 
 ## Show the output of the example

@@ -65,6 +65,6 @@ There is no address in the address table for `personId = 1`, so we return `null`
 ## Run
 
 ```bash
-uv run pytest problems/p0175_combine_two_tables -k practice
+uv run pytest p0175
 uv run python -m problems.p0175_combine_two_tables._internal.main
 ```
