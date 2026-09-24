@@ -40,6 +40,21 @@ New problem: run its tests. All `solution` tests must pass, all `practice` tests
 uv run pytest problems/pNNNN_<slug>
 ```
 
+## Add a problem
+
+In Claude Code, add a problem from a LeetCode URL:
+
+```text
+/add-problem https://leetcode.com/problems/second-highest-salary/
+```
+
+The skill uses these scripts. You can also run them yourself:
+
+```bash
+uv run python .claude/skills/add-problem/scripts/fetch.py <url-or-slug>  # print the problem as JSON
+uv run python .claude/skills/add-problem/scripts/scaffold.py pNNNN_<slug> # make placeholder files
+```
+
 ## Colors
 
 Reports use same color setting as pytest.

@@ -79,6 +79,8 @@ problems/pNNNN_<slug>/  # NO __init__.py here (namespace package)
 
 ## Add a new problem
 
+Use `/add-problem <leetcode-url>` skill (`.claude/skills/add-problem/`). It fetches problem, makes placeholders, fills files. Manual steps:
+
 1. Make `problems/pNNNN_<slug>/_internal/` w/ empty `_internal/__init__.py`. No `__init__.py` in problem folder.
 2. Copy `data.py`, `test_cases.py`, `main.py` from `p0175_combine_two_tables/_internal/`. Change schemas, `CASES`, table names.
 3. Write `_internal/solution.py` w/ answer, `_internal/practice_template.py` w/ stubs (docstring: title, "Read question.md", schemas).
