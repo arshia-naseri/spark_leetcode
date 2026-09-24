@@ -32,6 +32,9 @@ EXAMPLE_OUTPUT = [
 # Each case: (users rows, register rows, expected output rows).
 CASES = [
     (EXAMPLE_USERS, EXAMPLE_REGISTER, EXAMPLE_OUTPUT),
+    # No users: Register can only hold users from Users, so it is also empty.
+    # The output is empty.
+    ([], [], []),
     # No registrations: no contests in the output.
     (EXAMPLE_USERS, [], []),
     # One user: each contest is 100 percent.
