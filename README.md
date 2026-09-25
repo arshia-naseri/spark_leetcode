@@ -1,14 +1,36 @@
 # Spark LeetCode
 
-Practice LeetCode database problems with PySpark.
+Solve LeetCode SQL problems with Apache Spark, on your own computer.
 
-Each problem has a reference answer and two blank practice files:
+LeetCode accepts answers to its database problems in SQL and Pandas, but not in PySpark.
+If you want to learn Spark, this project gives you the same problems in PySpark.
+You write your answer, click **Run**, and see the result in the same format as LeetCode: Accepted, Wrong Answer or Runtime Error.
+
+## What you get
+
+- LeetCode database problems, sorted by difficulty (easy, medium, hard).
+- Two ways to solve each problem: the DataFrame API or Spark SQL. Do one or both.
+- A local web page with the question, a code editor and the test results side by side.
+- Extra test cases after the LeetCode example, for example empty tables and null values.
+- A reference answer for each problem, if you get stuck.
+
+## How to start
+
+1. Install the requirements and the project (see below).
+2. Run `uv run python -m webui`.
+3. Open <http://127.0.0.1:8000>, select a problem, write your code and click **Run**.
+
+You can also use your own editor and run the tests from the terminal. See [Quick start without the web UI](#quick-start-without-the-web-ui).
+
+## How it works
+
+Each problem has two blank practice files:
 
 - `practice_dataframe.py`: write `solve()` with the DataFrame API.
 - `practice_sql.py`: write `solve_sql()` with Spark SQL.
 
-You can do one method or both. The two files are independent. An error in one file does not stop the tests of the other file.
-The tests compare your output with the expected output and show the result in LeetCode format.
+The two files are independent. An error in one file does not stop the tests of the other file.
+The tests compare your output with the expected output.
 
 ## Requirements
 
@@ -111,10 +133,20 @@ spark_leetcode/
 
 ## Add a problem
 
-In [Claude Code](https://claude.com/claude-code), run:
+In [Claude Code](https://claude.com/claude-code), run `/add-problem` with the problem URL or the problem slug:
 
 ```text
 /add-problem https://leetcode.com/problems/<slug>/
+/add-problem <slug>
 ```
+
+Example:
+
+```text
+/add-problem https://leetcode.com/problems/second-highest-salary/
+/add-problem second-highest-salary
+```
+
+The slug is the part of the URL after `/problems/`.
 
 For the manual steps, see `CLAUDE.md`.
