@@ -76,6 +76,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chips { display: flex; gap: 6px; }
 .chip { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 13px; color: var(--muted); }
 .chip.active { color: var(--text); border-color: #666; }
+#reset-progress { display: inline-flex; align-items: center; gap: 6px; }
+#reset-progress:hover { color: var(--text); }
+#reset-progress[hidden] { display: none; }
+#reset-progress .lucide { width: 14px; height: 14px; }
 
 .problem-list { border-radius: 8px; overflow: hidden; }
 .problem-row {

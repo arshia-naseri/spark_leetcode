@@ -77,6 +77,7 @@ function renderList() {
     (!diffFilter || p.difficulty === diffFilter) &&
     (!q || p.title.toLowerCase().includes(q) || String(p.number).startsWith(q)));
   $("#count").textContent = `${rows.length} / ${problems.length}`;
+  $("#reset-progress").hidden = !problems.some((p) => p.solved.length);
   $("#problem-list").innerHTML = rows.length ? rows.map((p) => `
     <a class="problem-row" href="/p/${p.name}">
       ${statusIcon(p)}
@@ -97,6 +98,13 @@ function statusIcon(p) {
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
 $("#search").addEventListener("input", renderList);
+$("#reset-progress").addEventListener("click", async () => {
+  const n = problems.filter((p) => p.solved.length).length;
+  if (!confirm(`Remove the solved marks of ${n} problem${n === 1 ? "" : "s"}? Your practice code stays.`)) return;
+  await api("/api/progress", { method: "DELETE" });
+  problems = await api("/api/problems");
+  renderList();
+});
 $("#diff-filter").addEventListener("click", (e) => {
   const btn = e.target.closest("button");
   if (!btn) return;

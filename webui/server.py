@@ -11,6 +11,7 @@ The body of PUT and POST has "method": "dataframe" (practice_dataframe.py) or "s
     POST /api/problems/<name>/complete  code completions at a cursor position (jedi)
     POST /api/problems/<name>/describe  signature and docstring of one completion
     POST /api/problems/<name>/signature signature and docstring of the call at the cursor
+    DELETE /api/progress            remove the solved marks of all problems
     GET  /api/spark-config          Spark settings and the defaults
     PUT  /api/spark-config          save the Spark settings ({"config": {key: value}})
 The Spark settings apply to the next run. Each run starts a new Spark JVM.
@@ -295,6 +296,13 @@ class Handler(BaseHTTPRequestHandler):
             (problem / PRACTICE[method]).write_text(body["code"])
             return self._json({"saved": True})
         return None
+
+    def do_DELETE(self):  # noqa: N802
+        if self.path != "/api/progress":
+            return self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
+        with _progress_lock:
+            PROGRESS.unlink(missing_ok=True)
+        return self._json({"reset": True})
 
     def do_POST(self):  # noqa: N802
         m = re.fullmatch(r"/api/problems/(\w+)/(run|reset|complete|describe|signature)", self.path)
