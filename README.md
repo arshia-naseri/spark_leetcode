@@ -92,18 +92,21 @@ The new settings apply to the next run.
 
 ## Project layout
 
-```
-common/          # shared code: Spark session, answer check, practice file helpers
-problems/
-  easy/ medium/ hard/
-    pNNNN_<slug>/
-      question.md            # problem statement
-      practice_dataframe.py  # your solve() (git-ignored)
-      practice_sql.py        # your solve_sql() (git-ignored)
-      _internal/             # templates, reference answer, data, tests
-webui/           # local web UI
-reset.py         # resets practice files
-docs/            # documentation
+```text
+spark_leetcode/
+├── problems/
+│   ├── easy/
+│   │   └── p0175_combine_two_tables/
+│   │       ├── question.md             # problem statement
+│   │       ├── practice_dataframe.py   # your solve()      (git-ignored)
+│   │       ├── practice_sql.py         # your solve_sql()  (git-ignored)
+│   │       └── _internal/              # templates, reference answer, data, tests
+│   ├── medium/
+│   └── hard/
+├── webui/                              # local web UI
+├── common/                             # Spark session, answer check, practice file helpers
+├── docs/                               # documentation
+└── reset.py                            # resets practice files to the templates
 ```
 
 ## Add a problem
