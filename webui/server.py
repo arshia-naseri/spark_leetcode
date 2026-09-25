@@ -10,6 +10,7 @@ The body of PUT and POST has "method": "dataframe" (practice_dataframe.py) or "s
 (practice_sql.py).
     POST /api/problems/<name>/complete  code completions at a cursor position (jedi)
     POST /api/problems/<name>/describe  signature and docstring of one completion
+    POST /api/problems/<name>/signature signature and docstring of the call at the cursor
     GET  /api/spark-config          Spark settings and the defaults
     PUT  /api/spark-config          save the Spark settings ({"config": {key: value}})
 The Spark settings apply to the next run. Each run starts a new Spark JVM.
@@ -43,6 +44,9 @@ _run_lock = threading.Lock()
 _jedi_lock = threading.Lock()
 _jedi_project = jedi.Project(ROOT)
 MAX_COMPLETIONS = 200
+# Methods with a passed run, per problem: {problem: [method, ...]}. Git-ignored.
+PROGRESS = ROOT / "progress.json"
+_progress_lock = threading.Lock()
 
 
 def _problems() -> dict[str, Path]:
@@ -61,7 +65,29 @@ def _summary(problem: Path) -> dict:
         "title": _title(problem),
         "difficulty": problem.parent.name,
         "attempted": any(_changed(problem, m) for m in METHODS),
+        "solved": _load_progress().get(problem.name, []),
     }
+
+
+def _load_progress() -> dict[str, list[str]]:
+    try:
+        return json.loads(PROGRESS.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def _set_solved(problem: Path, method: str, solved: bool) -> None:
+    """Add or remove the method in the solved methods of the problem."""
+    with _progress_lock:
+        progress = _load_progress()
+        methods = set(progress.get(problem.name, [])) - {method}
+        if solved:
+            methods.add(method)
+        if methods:
+            progress[problem.name] = sorted(methods)
+        else:
+            progress.pop(problem.name, None)
+        PROGRESS.write_text(json.dumps(progress, indent=2) + "\n")
 
 
 def _changed(problem: Path, method: str) -> bool:
@@ -106,9 +132,11 @@ def _completions(problem: Path, body: dict) -> list:
     path = problem / PRACTICE[body["method"]]
     script = jedi.Script(body["code"], path=path, project=_jedi_project)
     try:
-        return script.complete(body["line"], body["ch"])
+        found = script.complete(body["line"], body["ch"])
     except ValueError:  # The position is not in the code.
         return []
+    # Put the keyword arguments of the call (for example "on=") first.
+    return sorted(found, key=lambda c: not c.name.endswith("="))
 
 
 def _complete(problem: Path, body: dict) -> dict:
@@ -117,6 +145,62 @@ def _complete(problem: Path, body: dict) -> dict:
         prefix = found[0].get_completion_prefix_length() if found else 0
         items = [{"name": c.name, "type": c.type} for c in found]
     return {"from_ch": body["ch"] - prefix, "items": items}
+
+
+def _plain(text: str) -> str:
+    """Remove the common reStructuredText markup: ``x`` and :class:`~a.b.X` become x and X."""
+    text = re.sub(r":\w+:`~?(?:[\w.]*\.)?([^`]+)`", r"\1", text)
+    return re.sub(r"``([^`]+)``", r"\1", text)
+
+
+def _param_docs(doc: str) -> dict[str, str]:
+    """Read the "Parameters" section of a numpydoc docstring. Return {name: "name : type" line
+    and the description}."""
+    lines = doc.splitlines()
+    try:
+        start = next(i for i in range(len(lines) - 1)
+                     if lines[i].strip() == "Parameters" and set(lines[i + 1].strip()) == {"-"})
+    except StopIteration:
+        return {}
+    found, names = {}, []
+    for i in range(start + 2, len(lines)):
+        line = lines[i]
+        if i + 1 < len(lines) and line.strip() and set(lines[i + 1].strip()) == {"-"}:
+            break  # The next section starts.
+        if line and not line[0].isspace():
+            names = [n.strip().lstrip("*") for n in line.split(":")[0].split(",")]
+            for name in names:
+                found[name] = [line.strip()]
+        elif line.strip():
+            for name in names:
+                found[name].append("    " + line.strip())
+    return {name: "\n".join(text) for name, text in found.items()}
+
+
+def _signature(problem: Path, body: dict) -> dict:
+    """Return the signature of the call that has the cursor in its arguments. index is the
+    argument at the cursor, or null."""
+    path = problem / PRACTICE[body["method"]]
+    with _jedi_lock:
+        script = jedi.Script(body["code"], path=path, project=_jedi_project)
+        try:
+            found = script.get_signatures(body["line"], body["ch"])
+        except ValueError:  # The position is not in the code.
+            found = []
+        if not found:
+            return {"name": ""}
+        sig = found[0]
+        params = [p.to_string() for p in sig.params]
+        text = sig.to_string()
+        head = f"{sig.name}({', '.join(params)})"
+        returns = text[len(head):] if text.startswith(head) else ""
+        doc = _plain(sig.docstring(raw=True).strip())
+    param_doc = ""
+    if sig.index is not None and sig.index < len(params):
+        name = re.split(r"[:=]", params[sig.index])[0].strip().lstrip("*")
+        param_doc = _param_docs(doc).get(name, "")
+    return {"name": sig.name, "params": params, "index": sig.index, "returns": returns,
+            "param_doc": param_doc, "doc": doc[:3000]}
 
 
 def _describe(problem: Path, body: dict) -> dict:
@@ -213,7 +297,7 @@ class Handler(BaseHTTPRequestHandler):
         return None
 
     def do_POST(self):  # noqa: N802
-        m = re.fullmatch(r"/api/problems/(\w+)/(run|reset|complete|describe)", self.path)
+        m = re.fullmatch(r"/api/problems/(\w+)/(run|reset|complete|describe|signature)", self.path)
         if not m:
             return self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
         problem = self._problem(m[1])
@@ -225,14 +309,23 @@ class Handler(BaseHTTPRequestHandler):
             return None
         if m[2] == "reset":
             reset(problem, (method,))
+            _set_solved(problem, method, False)
             return self._json({"code": (problem / PRACTICE[method]).read_text()})
         if m[2] == "complete":
             return self._json(_complete(problem, body))
         if m[2] == "describe":
             return self._json(_describe(problem, body))
+        if m[2] == "signature":
+            return self._json(_signature(problem, body))
         (problem / PRACTICE[method]).write_text(body["code"])
         with _run_lock:
-            return self._json(_run(problem, method, len(load_cases(problem))))
+            data = _run(problem, method, len(load_cases(problem)))
+        results = data["results"]
+        passed = bool(results) and not data["errors"] and all(r["status"] == "accepted" for r in results)
+        # A skipped run (no code yet) keeps the old state. A failed run removes it.
+        if passed or any(r["status"] != "skipped" for r in results) or data["errors"]:
+            _set_solved(problem, method, passed)
+        return self._json(data)
 
 
 def serve(host: str, port: int) -> None:

@@ -24,6 +24,9 @@ derby.log
 # Local Spark settings from the web UI
 spark_config.json
 
+# Solved problems from the web UI
+progress.json
+
 # Environment files
 .env
 

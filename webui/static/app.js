@@ -79,10 +79,19 @@ function renderList() {
   $("#count").textContent = `${rows.length} / ${problems.length}`;
   $("#problem-list").innerHTML = rows.length ? rows.map((p) => `
     <a class="problem-row" href="/p/${p.name}">
-      <span class="dot-attempted" title="${p.attempted ? "Attempted: a practice file has changes" : ""}">${p.attempted ? icon("CircleDot") : ""}</span>
+      ${statusIcon(p)}
       <span class="problem-title">${esc(p.title)}</span>
       <span class="diff-${p.difficulty}">${cap(p.difficulty)}</span>
     </a>`).join("") : `<div class="empty">No questions found.</div>`;
+}
+
+function statusIcon(p) {
+  if (p.solved.length) {
+    const how = p.solved.map((m) => (m === "sql" ? "SQL" : "DataFrame")).join(" and ");
+    return `<span class="dot-solved" title="Solved: ${how}">${icon("Check")}</span>`;
+  }
+  if (p.attempted) return `<span class="dot-attempted" title="Attempted: a practice file has changes">${icon("CircleDot")}</span>`;
+  return "<span></span>";
 }
 
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
@@ -126,12 +135,15 @@ function initEditor() {
       "Ctrl-Space": showHints,
     },
   });
-  // Show completions while the user types a name or after a ".".
+  // Show completions while the user types a name, after a ".", or in call arguments after "(" or ",".
   editor.on("inputRead", (cm, change) => {
     if (cm.state.completionActive || change.text.length !== 1) return;
-    if (!/[A-Za-z_.]$/.test(change.text[0])) return;
-    const type = cm.getTokenAt(cm.getCursor()).type || "";
-    if (!/string|comment/.test(type)) showHints(cm);
+    const cur = cm.getCursor();
+    const before = cm.getLine(cur.line).slice(0, cur.ch);
+    const inArgs = /[(,]\s*$/.test(before);
+    if (!inArgs && !/[A-Za-z_.]$/.test(before)) return;
+    const type = cm.getTokenAt(cur).type || "";
+    if (!/string|comment/.test(type)) showHints(cm, inArgs);
   });
   editor.on("change", (_cm, change) => {
     if (change.origin === "setValue") return;
@@ -143,24 +155,31 @@ function initEditor() {
   editor.on("cursorActivity", (cm) => {
     const c = cm.getCursor();
     $("#cursor").textContent = `Ln ${c.line + 1}, Col ${c.ch + 1}`;
+    updateSignature(cm);
   });
+  editor.on("blur", hideSignature);
+  editor.on("keydown", (_cm, e) => { if (e.key === "Escape") hideSignature(); });
 }
 
 // ---------- Completions (jedi on the server) ----------
 
 const KIND_LETTER = { function: "ƒ", class: "C", module: "M", instance: "v", param: "p", statement: "v", keyword: "k", property: "p", path: "/" };
 
-function showHints(cm) {
-  cm.showHint({ hint: pythonHint, completeSingle: false });
+// paramsOnly: after "(" or ",", show the list only when the call has keyword arguments (not for "," in a list).
+function showHints(cm, paramsOnly = false) {
+  const hint = (cm2, callback) => pythonHint(cm2, callback, paramsOnly);
+  hint.async = true;
+  cm.showHint({ hint, completeSingle: false });
 }
 
-function pythonHint(cm, callback) {
+function pythonHint(cm, callback, paramsOnly = false) {
   if (!current) return callback(null);
   const cur = cm.getCursor();
   const code = cm.getValue();
   api(`/api/problems/${current.name}/complete`, { method: "POST", body: { code, method, line: cur.line + 1, ch: cur.ch } })
     .then(({ from_ch, items }) => {
       if (!items.length) return callback(null);
+      if (paramsOnly && from_ch === cur.ch && !items.some((it) => it.name.endsWith("="))) return callback(null);
       const data = {
         list: items.map((it) => ({ text: it.name, kind: it.type, render: renderHint })),
         from: CodeMirror.Pos(cur.line, from_ch),
@@ -172,7 +191,6 @@ function pythonHint(cm, callback) {
     })
     .catch(() => callback(null));
 }
-pythonHint.async = true;
 
 function renderHint(el, _data, item) {
   el.innerHTML = `<span class="hint-kind kind-${esc(item.kind)}">${KIND_LETTER[item.kind] || "·"}</span>${esc(item.text)}`;
@@ -215,6 +233,47 @@ function showDoc(item, el, code, cur) {
     box.style.left = right ? `${rect.right + 4}px` : "";
     box.style.right = right ? "" : `${window.innerWidth - rect.left + 4}px`;
   }, 120);
+}
+
+// ---------- Signature help: the call that has the cursor in its arguments ----------
+
+let sigTimer = null;
+let sigSeq = 0;
+
+function hideSignature() {
+  clearTimeout(sigTimer);
+  sigSeq++;
+  const box = $("#sig-help");
+  if (box) box.remove();
+}
+
+function updateSignature(cm) {
+  clearTimeout(sigTimer);
+  if (!current || cm.somethingSelected()) return hideSignature();
+  const seq = ++sigSeq;
+  sigTimer = setTimeout(async () => {
+    const cur = cm.getCursor();
+    const info = await api(`/api/problems/${current.name}/signature`, {
+      method: "POST", body: { code: cm.getValue(), method, line: cur.line + 1, ch: cur.ch },
+    }).catch(() => null);
+    if (seq !== sigSeq) return; // The cursor moved again.
+    if (!info || !info.name) return hideSignature();
+    let box = $("#sig-help");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "sig-help";
+      document.body.appendChild(box);
+    }
+    const params = info.params.map((p, i) => i === info.index ? `<b class="sig-active">${esc(p)}</b>` : esc(p));
+    box.innerHTML = `<div class="hint-sig">${esc(info.name)}(${params.join(", ")})${esc(info.returns)}</div>`
+      + (info.param_doc ? `<div class="sig-param">${esc(info.param_doc)}</div>` : "")
+      + (info.doc ? `<div class="hint-body">${esc(info.doc)}</div>` : "");
+    // Put the box above the cursor line (the completion list opens below it). Below if no space.
+    const at = cm.cursorCoords(cur, "window");
+    const above = at.top - box.offsetHeight - 4;
+    box.style.left = `${Math.max(4, Math.min(at.left, window.innerWidth - box.offsetWidth - 4))}px`;
+    box.style.top = `${above >= 4 ? above : at.bottom + 4}px`;
+  }, 150);
 }
 
 async function save() {

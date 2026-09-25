@@ -86,6 +86,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .problem-row:hover .problem-title { color: var(--blue); }
 .problem-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot-attempted { color: var(--medium); }
+.dot-solved { color: var(--easy); }
 .diff-easy { color: var(--easy); }
 .diff-medium { color: var(--medium); }
 .diff-hard { color: var(--hard); }
@@ -144,7 +145,7 @@ li.CodeMirror-hint-active { background: #04395e; color: #fff; }
 .hint-kind.kind-module { color: #75beff; }
 .hint-kind.kind-instance, .hint-kind.kind-statement, .hint-kind.kind-param { color: #75beff; }
 .hint-kind.kind-keyword { color: var(--muted); }
-#hint-doc {
+#hint-doc, #sig-help {
   position: fixed; z-index: 21; width: 420px; max-height: 18em; overflow: auto;
   background: #252526; border: 1px solid #454545; border-radius: 6px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, .5); padding: 8px 10px;
@@ -152,6 +153,9 @@ li.CodeMirror-hint-active { background: #04395e; color: #fff; }
 }
 .hint-sig { color: #9cdcfe; white-space: pre-wrap; word-break: break-word; }
 .hint-body { margin-top: 6px; white-space: pre-wrap; color: #bbb; }
+#sig-help { width: auto; max-width: 560px; max-height: 12em; z-index: 20; }
+.sig-active { color: #fff; text-decoration: underline; }
+.sig-param { margin-top: 6px; padding: 6px 8px; white-space: pre-wrap; color: #e6e6e6; background: #1e1e1e; border-left: 2px solid #9cdcfe; }
 
 /* Question markdown */
 .md h1 { font-size: 22px; margin: 0 0 8px; }
