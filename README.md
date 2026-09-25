@@ -58,6 +58,9 @@ uv run python -m webui
 
 The web UI opens at <http://127.0.0.1:8000>. It shows the list of problems and marks the solved methods.
 Each problem opens in three panels: the question, a code editor with PySpark completions, and the test results.
+
+![Problem page in the web UI](docs/images/problem-page.png)
+
 Select `solve()` (DataFrame API) or `solve_sql()` (Spark SQL), write your code, and click **Run** (Ctrl/⌘ + Enter).
 The editor saves your code automatically. A run takes approximately 6 seconds, because each run starts a new JVM.
 
