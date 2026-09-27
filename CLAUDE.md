@@ -101,6 +101,16 @@ Use `/add-problem <leetcode-url>` skill (`.claude/skills/add-problem/`). It fetc
 4. Write `question.md` LeetCode format: title, difficulty + URL, tables, task, examples, run commands.
 5. Run `uv run pytest pNNNN --all`. All `solution` tests pass, all `practice` tests skipped.
 
+## README screenshot
+
+`docs/images/problem-page.png` = web UI problem page, shown in README. Change to problem page (`webui/static/`, `question.md` render, header) → make new screenshot. Steps:
+
+1. Export clean copy: `git archive HEAD | tar -x -C <tmp>`. Run `reset.py --all` there. Screenshot must show templates, not user practice code.
+2. In copy: `<project>/.venv/bin/python -m webui --port 8765 --no-browser`.
+3. Headless Chrome, 1440x860, scale 2 (PNG 2880x1720):
+   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=1440,860 --virtual-time-budget=10000 --screenshot=problem-page.png http://127.0.0.1:8765/p/p0181_employees_earning_more_than_their_managers`
+4. Copy PNG to `docs/images/problem-page.png`. Stop server. Delete copy.
+
 ## Style
 
 - Code comments, docstrings, docs in ASD-STE100 Simplified Technical English.

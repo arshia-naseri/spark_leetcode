@@ -1,3 +1,9 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/banner/dark_banner.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/banner/light_banner.png">
+  <img alt="Spark LeetCode banner" src="docs/images/banner/light_banner.png">
+</picture>
+
 # Spark LeetCode
 
 Solve LeetCode SQL problems with Apache Spark, on your own computer.
