@@ -6,6 +6,11 @@
 
 # Spark LeetCode
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PySpark 4.2](https://img.shields.io/badge/pyspark-4.2-E25A1C?logo=apachespark&logoColor=white)](https://spark.apache.org/docs/latest/api/python/)
+[![Java 17+](https://img.shields.io/badge/java-17%2B-ED8B00?logo=openjdk&logoColor=white)](https://adoptium.net/)
+[![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+
 Solve LeetCode SQL problems with Apache Spark, on your own computer.
 
 LeetCode accepts answers to its database problems in SQL and Pandas, but not in PySpark.
