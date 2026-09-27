@@ -6,6 +6,12 @@ LeetCode accepts answers to its database problems in SQL and Pandas, but not in 
 If you want to learn Spark, this project gives you the same problems in PySpark.
 You write your answer, click **Run**, and see the result in the same format as LeetCode: Accepted, Wrong Answer or Runtime Error.
 
+## Why this project
+
+Users asked LeetCode for Spark support ([discussion](https://leetcode.com/discuss/general-discussion/3544154/pandas-polars-spark-on-leetcode/)), but LeetCode did not add it.
+A possible cause: each Spark run starts a JVM (approximately 6 seconds, 1 GB of memory), which is expensive for an online judge.
+On your own computer, this cost is small.
+
 ## What you get
 
 - LeetCode database problems, sorted by difficulty (easy, medium, hard).

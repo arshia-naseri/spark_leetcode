@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spark LeetCode</title>
+  <link rel="icon" href="/static/logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
@@ -21,7 +22,7 @@
   <!-- List page -->
   <div id="list-page" class="page" hidden>
     <header class="topbar">
-      <a class="brand" href="/"><i data-lucide="zap"></i> Spark LeetCode</a>
+      <a class="brand" href="/"><img class="logo" src="/static/logo.png" alt=""> Spark LeetCode</a>
       <span class="spacer"></span>
       <button class="icon-btn settings-btn" title="Spark settings"><i data-lucide="settings"></i></button>
     </header>
@@ -44,7 +45,7 @@
   <!-- Problem page -->
   <div id="problem-page" class="page" hidden>
     <header class="topbar">
-      <a class="brand" href="/" title="Spark LeetCode"><i data-lucide="zap"></i></a>
+      <a class="brand" href="/" title="Spark LeetCode"><img class="logo" src="/static/logo.png" alt=""></a>
       <a class="nav-link" href="/"><i data-lucide="list"></i> Problem List</a>
       <div class="topbar-center">
         <div class="seg" id="method" title="Function to test">
@@ -100,7 +101,7 @@
   <dialog id="settings" class="dialog">
     <form method="dialog" id="settings-form">
       <h2>Spark settings</h2>
-      <p class="muted">These settings go to <code>SparkSession.builder.config()</code>. They apply to the next run and to <code>uv run pytest</code>. The file is <code>spark_config.json</code>.</p>
+      <p class="muted">Change how Spark runs your code. The changes apply to the next run, here and in <code>uv run pytest</code>. Click <b>i</b> to see what a setting does.</p>
       <div id="settings-rows" class="settings-rows"></div>
       <button type="button" id="settings-add" class="btn"><i data-lucide="plus"></i> Add setting</button>
       <div id="settings-error" class="error-box" hidden></div>

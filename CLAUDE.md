@@ -87,9 +87,9 @@ problems/<difficulty>/  # easy, medium, hard. NO __init__.py (namespace package)
 
 ## Spark config
 
-`common/spark.py` `DEFAULTS`: `spark.master=local[1]`, `spark.sql.shuffle.partitions=1`, UI off, session tz UTC. Log level ERROR (fixed). Driver mem default 1g. Most test time (~6 s) = JVM startup.
+`common/spark.py` `DEFAULTS`: `spark.master=local[1]`, `spark.sql.shuffle.partitions=1`, UI off, session tz UTC, `spark.driver.memory=1g`. Log level ERROR (fixed). Most test time (~6 s) = JVM startup.
 
-`spark_config.json` (project root, git-ignored) replaces `DEFAULTS` when it exists. Web UI gear button edits it (`GET`/`PUT /api/spark-config`). Save of `DEFAULTS` deletes file. Applies to next run + `uv run pytest` + `main.py`: each run = new JVM.
+`spark_config.json` (project root, git-ignored) goes on top of `DEFAULTS` when it exists. All `DEFAULTS` keys required (web UI: fixed name, no delete). Extra keys must start `spark.`. Web UI gear button edits it (`GET`/`PUT /api/spark-config`). Save of `DEFAULTS` deletes file. Applies to next run + `uv run pytest` + `main.py`: each run = new JVM.
 
 ## Add a new problem
 

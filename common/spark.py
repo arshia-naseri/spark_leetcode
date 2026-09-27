@@ -12,13 +12,14 @@ DEFAULTS = {
     "spark.sql.shuffle.partitions": "1",
     "spark.ui.enabled": "false",
     "spark.sql.session.timeZone": "UTC",
+    "spark.driver.memory": "1g",
 }
 
 
 def load_config() -> dict[str, str]:
-    """Return the settings in CONFIG_FILE, or DEFAULTS if the file does not exist."""
+    """Return DEFAULTS with the settings in CONFIG_FILE on top. All DEFAULTS keys are always there."""
     if CONFIG_FILE.exists():
-        return json.loads(CONFIG_FILE.read_text())
+        return {**DEFAULTS, **json.loads(CONFIG_FILE.read_text())}
     return dict(DEFAULTS)
 
 

@@ -26,6 +26,7 @@ import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import jedi
 
@@ -36,7 +37,7 @@ from .cases import load_cases
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = Path(__file__).resolve().parent / "static"
-STATIC_TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
+STATIC_TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png"}
 RUN_TIMEOUT_S = 300
 
 # Only one test run at a time. Each run starts its own Spark JVM.
@@ -218,15 +219,62 @@ def _spark_config() -> dict:
     return {"config": load_config(), "defaults": DEFAULTS}
 
 
+def _bad_time_zone(value: str) -> bool:
+    if re.fullmatch(r"[+-]\d{2}:\d{2}", value):
+        return False
+    try:
+        ZoneInfo(value)
+    except (ValueError, KeyError, OSError):
+        return True
+    return False
+
+
+def _bad_memory(value: str) -> bool:
+    m = re.fullmatch(r"(\d+)([mg])", value.lower())
+    return not m or int(m[1]) * (1024 if m[2] == "g" else 1) < 512
+
+
+# Check and message for the value of each required setting.
+REQUIRED_CHECKS = {
+    "spark.master": (
+        lambda v: not re.fullmatch(r"local(\[(\*|[1-9]\d*)\])?", v),
+        "Master must be local, local[N] (N = number of cores, 1 or more) or local[*]",
+    ),
+    "spark.sql.shuffle.partitions": (
+        lambda v: not re.fullmatch(r"[1-9]\d*", v),
+        "Shuffle partitions must be a whole number, 1 or more",
+    ),
+    "spark.ui.enabled": (
+        lambda v: v not in ("true", "false"),
+        "Spark UI must be true or false",
+    ),
+    "spark.sql.session.timeZone": (
+        _bad_time_zone,
+        "Time zone must be a zone name, for example UTC or Europe/Berlin, or an offset such as +01:00",
+    ),
+    "spark.driver.memory": (
+        _bad_memory,
+        "Driver memory must be a number with m or g, 512m or more, for example 1g",
+    ),
+}
+
+
 def _bad_config(config) -> str | None:
     """Return an error message if the Spark settings are not valid, else None."""
     if not isinstance(config, dict):
         return "The settings must be an object"
+    if missing := [key for key in DEFAULTS if key not in config]:
+        return f"Missing required setting: {missing[0]}"
     for key, value in config.items():
         if not key.strip() or key != key.strip() or " " in key:
             return f"Bad key: {key!r}"
+        if not key.startswith("spark.") or key == "spark.":
+            return f"The key {key} must start with 'spark.'"
         if not isinstance(value, str):
             return f"The value of {key} must be a string"
+    for key, (bad, message) in REQUIRED_CHECKS.items():
+        if bad(config[key]):
+            return f"{message}. The value {config[key]!r} is not correct."
     return None
 
 

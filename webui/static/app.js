@@ -593,17 +593,49 @@ route();
 
 let sparkDefaults = {};
 
+// Name and short help for each setting. The settings in sparkDefaults are required.
+const SETTING_INFO = {
+  "spark.master": ["Master", "Where Spark runs. local[N] uses N CPU cores on this computer. local[*] uses all cores. 1 core is enough for small tables."],
+  "spark.sql.shuffle.partitions": ["Shuffle partitions", "The number of parts that Spark makes for joins and group by. Spark uses 200 if you do not set it, which is slow for small tables."],
+  "spark.ui.enabled": ["Spark UI", "true starts the Spark web UI (http://localhost:4040) where you can see jobs and plans. false makes the start faster."],
+  "spark.sql.session.timeZone": ["Time zone", "The time zone for date and time values, for example UTC or Europe/Berlin."],
+  "spark.driver.memory": ["Driver memory", "The memory for Spark, for example 1g or 2g. Increase it only if a run stops with an out-of-memory error."],
+  "spark.sql.ansi.enabled": ["ANSI mode", "true makes SQL strict: bad casts and overflows give an error, not null."],
+  "spark.sql.adaptive.enabled": ["Adaptive query", "true lets Spark change the query plan while it runs, with the real data sizes."],
+};
+
+function settingHelp(key) {
+  if (!key) return "Type a setting name that starts with spark. See the Spark configuration documentation.";
+  const text = SETTING_INFO[key]?.[1] || "A Spark setting. See the Spark configuration documentation for what it does.";
+  const def = key in sparkDefaults ? ` Default: ${sparkDefaults[key]}.` : "";
+  return `<code>${esc(key)}</code><br>${esc(text + def)}`;
+}
+
+// A required row shows a fixed name and has no remove button.
 function settingsRow(key = "", value = "") {
-  const hint = key in sparkDefaults ? `Default: ${sparkDefaults[key]}` : "";
-  return `<div class="settings-row">
-    <input class="settings-key" placeholder="spark.some.key" value="${esc(key)}" spellcheck="false">
-    <input class="settings-value" placeholder="value" value="${esc(value)}" title="${esc(hint)}" spellcheck="false">
-    <button type="button" class="icon-btn settings-remove" title="Remove">${icon("Trash2")}</button>
+  const required = key in sparkDefaults;
+  const name = required
+    ? `<span class="settings-name">${esc(SETTING_INFO[key]?.[0] || key)}</span>`
+    : `<input class="settings-key" placeholder="spark.some.key" value="${esc(key)}" spellcheck="false">`;
+  const remove = required ? `<span class="settings-slot"></span>`
+    : `<button type="button" class="icon-btn settings-remove" title="Remove">${icon("Trash2")}</button>`;
+  return `<div class="settings-row" data-key="${required ? esc(key) : ""}">
+    ${name}
+    <input class="settings-value" placeholder="value" value="${esc(value)}" spellcheck="false">
+    <button type="button" class="icon-btn settings-info" title="What does this setting do?">${icon("Info")}</button>
+    ${remove}
+    <div class="settings-help" hidden></div>
   </div>`;
 }
 
+function rowKey(row) {
+  return row.dataset.key || row.querySelector(".settings-key").value.trim();
+}
+
 function renderSettings(config) {
-  $("#settings-rows").innerHTML = Object.entries(config).map(([k, v]) => settingsRow(k, v)).join("");
+  const required = Object.keys(sparkDefaults).map((k) => settingsRow(k, config[k] ?? sparkDefaults[k]));
+  const extra = Object.entries(config).filter(([k]) => !(k in sparkDefaults)).map(([k, v]) => settingsRow(k, v));
+  $("#settings-rows").innerHTML = [...required, ...extra].join("");
   $("#settings-error").hidden = true;
 }
 
@@ -629,8 +661,13 @@ $("#settings-add").addEventListener("click", () => {
 });
 
 $("#settings-rows").addEventListener("click", (e) => {
-  const btn = e.target.closest(".settings-remove");
-  if (btn) btn.closest(".settings-row").remove();
+  const row = e.target.closest(".settings-row");
+  if (e.target.closest(".settings-remove")) return row.remove();
+  if (e.target.closest(".settings-info")) {
+    const help = row.querySelector(".settings-help");
+    help.innerHTML = settingHelp(rowKey(row));
+    help.hidden = !help.hidden;
+  }
 });
 
 $("#settings-defaults").addEventListener("click", () => renderSettings(sparkDefaults));
@@ -640,10 +677,12 @@ $("#settings-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const config = {};
   for (const row of $$("#settings-rows .settings-row")) {
-    const key = row.querySelector(".settings-key").value.trim();
+    const key = rowKey(row);
     const value = row.querySelector(".settings-value").value.trim();
     if (!key && !value) continue;
     if (!key) return settingsError(`The value "${value}" has no key.`);
+    if (!key.startsWith("spark.") || key === "spark.") return settingsError(`The key ${key} must start with "spark.".`);
+    if (key in sparkDefaults && !value) return settingsError(`${SETTING_INFO[key]?.[0] || key} must have a value.`);
     if (key in config) return settingsError(`The key ${key} is in the list two times.`);
     config[key] = value;
   }
